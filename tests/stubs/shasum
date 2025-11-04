@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+hash="${HHS_SHA_SUM:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}"
+printf "%s  -\n" "$hash"
+exit 0

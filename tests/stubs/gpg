@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+fail_mode="${HHS_GPG_FAIL_MODE:-}"
+has_encrypt=0
+for arg in "$@"; do
+  if [[ "$arg" == "-c" ]]; then
+    has_encrypt=1
+    break
+  fi
+done
+if [[ "$fail_mode" == "all" ]]; then
+  exit 1
+elif [[ "$fail_mode" == "encrypt" && "$has_encrypt" -eq 1 ]]; then
+  exit 1
+elif [[ "$fail_mode" == "decrypt" && "$has_encrypt" -eq 0 ]]; then
+  exit 1
+fi
+file="${@: -1}"
+if [[ "$has_encrypt" -eq 1 ]]; then
+  # Simulate gpg symmetric encryption by creating the .gpg artifact.
+  [[ -f "$file" ]] && cp "$file" "${file}.gpg" || :
+else
+  # Simulate decryption by restoring the original file name.
+  out="${file%.gpg}"
+  [[ -f "$file" ]] && cp "$file" "$out" || :
+fi
+exit 0
