@@ -41,7 +41,10 @@ if [[ -d "${HOME}/.rvm" ]]; then
 
     echo -en "Activating RVM app..."
     # RVM setup
-    [[ ! -d "${HOME}/.rvm" ]] || __hhs_errcho "${FUNCNAME[0]}" "FAILED => Can't find RVM_HOME => \"${HOME}/.rvm\" !" && return 1
+    if [[ ! -d "${HOME}/.rvm" ]]; then
+      __hhs_errcho "${FUNCNAME[0]}" "FAILED => Can't find RVM_HOME => \"${HOME}/.rvm\" !"
+      return 1
+    fi
     export RVM_DIR="${HOME}/.rvm"
     if [[ -s "$RVM_DIR/scripts/rvm" ]] && __hhs_source "$RVM_DIR/scripts/rvm"; then
       export PATH="$PATH:$RVM_DIR/bin"
