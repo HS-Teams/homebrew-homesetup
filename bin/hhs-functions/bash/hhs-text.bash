@@ -78,41 +78,67 @@ function __hhs_ascof() {
   return 0
 }
 
-if __hhs_has "hexdump"; then
+# @function: Convert unicode to hexadecimal.
+# @param $1..$N [Req] : The unicode values to convert.
+function __hhs_utoh() {
 
-  # @function: Convert unicode to hexadecimal.
-  # @param $1..$N [Req] : The unicode values to convert.
-  function __hhs_utoh() {
+  local ret_val=1 converted_any=0
+  local uni hexa output python_ret=0
+  local missing=()
 
-    local result converted uni ret_val=1
+  if [[ $# -le 0 || "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "usage: ${FUNCNAME[0]} <4d-unicode...>"
+    echo ''
+    echo '  Notes: '
+    echo '    - unicode is a four digits hexadecimal number. E.g:. F205'
+    echo '    - exceeding digits will be ignored'
+    return 1
+  fi
 
-    if [[ $# -le 0 || "$1" == "-h" || "$1" == "--help" ]]; then
-      echo "usage: ${FUNCNAME[0]} <4d-unicode...>"
+  __hhs_has python3 || missing+=("python3")
+
+  if ((${#missing[@]})); then
+    __hhs_errcho "${FUNCNAME[0]}" "Missing required dependencies: ${missing[*]}"
+    return 1
+  fi
+
+  echo ''
+  for next in "$@"; do
+    hexa="${next:0:4}"
+    uni="$(printf '%04s' "${hexa^^}")"
+    uni="${uni// /0}"
+
+    [[ ${uni} =~ ^[0-9A-F]{4}$ ]] || continue
+
+    converted_any=1
+
+    printf "[%sUnicode:'\\\\u%s'%s]\n" "${HHS_HIGHLIGHT_COLOR}" "${uni,,}" "${NC}"
+
+    if output=$(python3 - "${uni}" <<'PYTHON'
+import sys
+
+code_point = int(sys.argv[1], 16)
+icon = chr(code_point)
+utf8_bytes = icon.encode('utf-8')
+
+hex_parts = ''.join(f'\\x{byte:02x}' for byte in utf8_bytes)
+oct_parts = ''.join(f'\\{byte:03o}' for byte in utf8_bytes)
+
+print(f"  Hex => {hex_parts}")
+print(f"  Icn => {icon}")
+print(f"  Oct => {oct_parts}")
+PYTHON
+    ); then
+      printf "%s%s%s\n" "${GREEN}" "${output}" "${NC}"
       echo ''
-      echo '  Notes: '
-      echo '    - unicode is a four digits hexadecimal number. E.g:. F205'
-      echo '    - exceeding digits will be ignored'
-      return 1
+      ret_val=0
     else
-      echo ''
-      for next in "$@"; do
-        hexa="${next:0:4}"
-        # More digits will be ignored
-        uni="$(printf '%04s' "${hexa}")"
-        [[ ${uni} =~ [0-9A-Fa-f]{4} ]] || continue
-        echo -e "[${HHS_HIGHLIGHT_COLOR}Unicode:'\u${uni}'${NC}]"
-        converted=$(python3 -c "import struct; print(bytes.decode(struct.pack('<I', int('${uni}', 16)), 'utf_32_le'))" | hexdump -Cb)
-        ret_val=$?
-        result=$(awk '
-        NR == 1 {printf "  Hex => "; print "\\\\x"$2"\\\\x"$3"\\\\x"$4}
-        NR == 2 {printf "  Oct => "; print "\\"$2"\\"$3"\\"$4}
-        NR == 1 {printf "  Icn => "; print "\\x"$2"\\x"$3"\\x"$4}
-        ' <<<"${converted}")
-        echo -e "${GREEN}${result}${NC}"
-        echo ''
-      done
+      python_ret=$?
+      ret_val=${python_ret}
     fi
+  done
 
-    return ${ret_val}
-  }
-fi
+  (( converted_any )) || return 1
+
+  return ${ret_val}
+}
