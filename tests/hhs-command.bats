@@ -42,8 +42,7 @@ setup() {
   export HHS_DIR="${BATS_TEST_TMPDIR}/hhs-dir"
   mkdir -p "${HHS_DIR}"
 
-  HHS_CMD_FILE="$(mktemp "${BATS_TEST_TMPDIR}/cmd.XXXXXX")"
-  export HHS_CMD_FILE
+  export HHS_CMD_FILE="${BATS_TEST_TMPDIR}/cmd.XXXXXX"
 }
 
 teardown() {
@@ -59,15 +58,15 @@ teardown() {
 @test "when-adding-commands-then-list-should-show-entries" {
   run __hhs_command -a run echo run
   assert_success
-  assert_output --partial "Command stored: \"RUN\""
+  assert_output --partial "Command saved: \"RUN\""
 
   run __hhs_command -a try echo try
   assert_success
-  assert_output --partial "Command stored: \"TRY\""
+  assert_output --partial "Command saved: \"TRY\""
 
   run __hhs_command -l
   assert_success
-  assert_output --partial "Available commands (2) stored:"
+  assert_output --partial "Available commands (2):"
   assert_output --partial "Command RUN"
   assert_output --partial "Command TRY"
 }
@@ -80,14 +79,15 @@ teardown() {
   assert_success
 
   run __hhs_command -r 1
-  assert_failure
-  assert_output --partial "Command (1) removed !"
+  assert_success
+  assert_output --partial "Command (1) removed!"
 
   run cat "${HHS_CMD_FILE}"
   assert_success
   assert_output --partial "Command TRY: echo try"
   refute_output --partial "Command RUN: echo run"
 }
+
 
 # TC - 3
 @test "when-removing-command-by-alias-then-should-update-file" {
@@ -98,7 +98,7 @@ teardown() {
 
   run __hhs_command -r run
   assert_success
-  assert_output --partial "Command removed: \"RUN\""
+  assert_output --partial "Command \"RUN\" removed!"
 
   run cat "${HHS_CMD_FILE}"
   assert_success

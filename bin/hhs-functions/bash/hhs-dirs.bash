@@ -271,6 +271,7 @@ function __hhs_load_dir() {
 
       case "$1" in
         -l)
+          # List all saved directories
           pad=$(printf '%0.1s' "."{1..60})
           pad_len=41
           echo ' '
@@ -284,8 +285,10 @@ function __hhs_load_dir() {
             echo -e "${GREEN} points to ${WHITE}'${dir}'"
           done
           echo "${NC}"
+          ret_val=0
           ;;
         $'')
+          # Use mselect to choose from the available saved directories
           if [[ ${#all_dirs[@]} -ne 0 ]]; then
             for idx in $(seq 1 "${#all_dirs[@]}"); do
               dir=${all_dirs[idx - 1]}
@@ -301,32 +304,40 @@ function __hhs_load_dir() {
               dir="${sel_dir##*=}"
               [[ -n "${dir}" ]] && ret_val=0
             fi
+            [[ -f "${mselect_file}" ]] && \rm -f "${mselect_file}"
           else
             echo "${YELLOW}No directories available yet !${NC}"
           fi
           ;;
         [a-zA-Z0-9_]*)
+          # Find the directory by its alias
           dir_alias=$(echo -en "$1" | tr -s '-' '_' | tr -s '[:space:]' '_' | tr '[:lower:]' '[:upper:]')
           dir=$(grep "^${dir_alias}=" "${HHS_SAVED_DIRS_FILE}" | awk -F '=' '{ print $2 }')
-          ret_val=0
           ;;
         *)
           __hhs_errcho "${FUNCNAME[0]}" "Invalid arguments: \"$1\""
+          return 1
           ;;
       esac
 
-      [[ -f "${mselect_file}" ]] && \rm -f "${mselect_file}"
-
-      if [[ ${ret_val} -eq 0 && -d "${dir}" ]]; then
-        __hhs_change_dir "${dir}" &> /dev/null || return 1
+      if [[ -n "${dir}" && -d "${dir}" ]]; then
+        __hhs_change_dir "${dir}" &> /dev/null || {
+          __hhs_errcho "${FUNCNAME[0]}" "Unable to change to directory: \"${dir}\""
+          return 1
+        }
         echo "${GREEN}Directory changed to: ${WHITE}\"$(pwd)\""
         ret_val=0
       elif [[ -n "${dir}" && ! -d "${dir}" ]]; then
         __hhs_errcho "${FUNCNAME[0]}" "Directory \"${dir}\" does not exist!"
         echo -e "${YELLOW}Hint: Type '$ save -r ${dir_alias}' to remove it."
+        return 1
+      else
+        __hhs_errcho "${FUNCNAME[0]}" "Alias \"${dir_alias}\" not found in saved directories !"
+        return 1
       fi
     else
       echo "${YELLOW}No directories saved yet: \"${HHS_SAVED_DIRS_FILE}\" !"
+      return 1
     fi
     echo "${NC}"
   fi
@@ -404,22 +415,28 @@ function __hhs_mkcd() {
     echo ''
     echo "E.g:. ${FUNCNAME[0]} dir1/dir2/dir3 (dirtree)"
     echo "E.g:. ${FUNCNAME[0]} dir1.dir2.dir3 (FQDN)"
-    return 0
+    return 1
   elif [[ -n "$1" && ! -d "$1" ]]; then
     dir_tree="${1//.//}"
     dir_tree="${dir_tree//-//}"
-    \mkdir -p "${dir_tree}" || return 1
+    \mkdir -p "${dir_tree}" || {
+      echo -e "${RED}   Failed to change into directory: ${WHITE}${dir}${NC}"
+      return 1
+    }
     last_pwd=$(pwd)
     IFS=$'/'
     for dir in ${dir_tree}; do
-      \cd "${dir}" || return 1
+      \cd "${dir}" || {
+      echo -e "${RED}   Failed to change into directory: ${WHITE}${dir}${NC}"
+      return 1
+    }
     done
     IFS="${OLDIFS}"
     export OLDPWD=${last_pwd}
-    echo "${GREEN}   Directories created: ${WHITE}./${dir_tree}"
-    echo "${GREEN}  Directory changed to: ${WHITE}$(pwd)${NC}"
-    ret_val=0
+    echo -e "${GREEN}   Directories created: ${WHITE}./${dir_tree}${NC}"
+    echo -e "${GREEN}  Directory changed to: ${WHITE}$(pwd)${NC}"
+    return 0
   fi
 
-  return ${ret_val}
+  return 1
 }

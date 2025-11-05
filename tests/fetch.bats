@@ -3,6 +3,7 @@
 load test_helper
 load_bats_libs
 
+# TC - 1
 @test "--headers forwards each value to curl" {
   local tmpdir
   tmpdir="$(mktemp -d)"
@@ -95,6 +96,7 @@ COMMONS
   rm -rf "${tmpdir}"
 }
 
+# TC - 2
 @test "--format routes the response through format_json" {
   local tmpdir
   tmpdir="$(mktemp -d)"

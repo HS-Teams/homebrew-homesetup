@@ -69,9 +69,11 @@ function __hhs_toolcheck() {
     tool_name="$1"
     check=$(command -v "${tool_name}")
     is_alias=$(alias "${tool_name}" >/dev/null 2>&1 && echo "OK")
-    [[ -z "${quiet}" ]] && echo -en "${ORANGE}[${HHS_MY_OS}]${NC} "
-    [[ -z "${quiet}" ]] && echo -en "Checking: ${YELLOW}${tool_name}${NC} "
-    [[ -z "${quiet}" ]] && printf '%*.*s' 0 $((pad_len - ${#tool_name})) "${pad}"
+    [[ -z "${quiet}" ]] && {
+      echo -en "${ORANGE}[${HHS_MY_OS}]${NC} "
+      echo -en "Checking: ${YELLOW}${tool_name}${NC} "
+      printf '%*.*s' 0 $((pad_len - ${#tool_name})) "${pad}"
+    }
     if __hhs_has "${tool_name}"; then
       if [[ -z "${is_alias}" && ${check} =~ ^(\/.*) ]]; then
         [[ -z "${quiet}" ]] && echo -e "${GREEN} ${CHECK_ICN} INSTALLED${NC} => ${check}"

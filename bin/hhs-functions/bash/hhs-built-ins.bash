@@ -51,33 +51,32 @@ function __hhs_open() {
 # @param $1 [Req] : The file path.
 function __hhs_edit() {
 
-  local filename="$1" editor="${EDITOR:-vi}"
+  local filename="$1" editor="${EDITOR:-vi}" ret_val=0
+  declare -a editors
 
   if [[ $# -le 0 || "$1" == "-h" || "$1" == "--help" ]]; then
     echo "usage: ${FUNCNAME[0]} <file_path>"
     return 1
   else
-    [[ -s "${filename}" ]] || touch "${filename}" > /dev/null 2>&1
-    [[ -s "${filename}" ]] || __hhs_errcho "${FUNCNAME[0]}" "Unable to create file \"${filename}\""
+    [[ -f "${filename}" ]] || touch "${filename}" > /dev/null 2>&1
+    [[ -f "${filename}" ]] || __hhs_errcho "${FUNCNAME[0]}" "Unable to create or access the file \"${filename}\""
 
-    if [[ -n "${editor}" ]] && __hhs_has "${editor}" && ${editor} "${filename}"; then
-      return $?
-    elif __hhs_has gedit && \gedit "${filename}"; then
-      return $?
-    elif __hhs_has emacs && \emacs "${filename}"; then
-      return $?
-    elif __hhs_has vim && \vim "${filename}"; then
-      return $?
-    elif __hhs_has vi && \vi "${filename}"; then
-      return $?
-    elif __hhs_has cat && \cat > "${filename}"; then
+    editors=("${editor}" gedit emacs vim vi)
+    for ed in "${editors[@]}"; do
+      if [[ -n "${ed}" ]] && __hhs_has "${ed}" && "${ed}" "${filename}"; then
+        return $?
+      fi
+    done
+
+    if __hhs_has cat && \cat > "${filename}"; then
       return $?
     else
       __hhs_errcho "${FUNCNAME[0]}" "Unable to find a suitable editor for the file \"${filename}\" !"
+      ret_val=1
     fi
   fi
 
-  return 1
+  return $ret_val
 }
 
 # shellcheck disable=SC2030,SC2031

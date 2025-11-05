@@ -16,15 +16,18 @@
 function tests() {
 
   local started finished log_file badge fail=0 pass=0 skip=0 status num details re_status re_len len re_skip
-  local diff_time diff_time_sec diff_time_ms all_tests=("${@}") range_str
+  local diff_time diff_time_sec diff_time_ms all_tests=("${@}") range_str old_next re_len re_skip re_status
 
   command -v bats &> /dev/null || quit 1 "'Bats' application not available on your PATH !"
 
   log_file="${HHS_LOG_DIR}/hhs-tests.log"
   badge="${HHS_HOME}/check-badge.svg"
 
-  # If no bat file is provided, then assume  that we want tio run all HHS tests.
-  [[ ${#all_tests[@]} -eq 0 ]] && all_tests=("${HHS_HOME}/tests")
+  # If no bat file is provided, then assume  that we want to run all HHS tests.
+  [[ ${#all_tests[@]} -eq 0 ]] && {
+    echo -e "\n${WHITE}[$(date +'%H:%M:%S')] Executing ALL HomeSetup tests"
+    all_tests=("${HHS_HOME}/tests")
+  }
   echo -n '' > "${log_file}"
 
   # Execute bats tests
@@ -33,18 +36,28 @@ function tests() {
   re_len='^([0-9]+)\.\.([0-9]+)$'
   started="$(python3 -c 'import time; print(int(time.time() * 1000))')"
 
-  echo -e "\n${WHITE}[$(date +'%H:%M:%S')] Running Bats tests from $(pwd)"
+  echo -e "\n${WHITE}[$(date +'%H:%M:%S')] Running (${#all_tests[@]}) Bats tests from $(pwd)"
   echo -e "${WHITE}[$(date +'%H:%M:%S')] Logs will be available at:${log_file}\n"
   echo -e "  ${BLUE}|-Bats\t: ${WHITE}v$(__hhs_version bats | head -n 1)"
   echo -e "  ${BLUE}|-Bash\t: ${WHITE}v$(__hhs_version bash | head -n 1)"
   echo -e "  ${BLUE}|-User\t: ${WHITE}${USER}"
   echo -en "${NC}"
 
+  # If a folder is provided, find all bats files inside it.
   [[ -d "${all_tests[*]}" ]] && all_tests=($(find "${all_tests[*]}" -maxdepth 1  -name "*.bats"))
   # If we did not find any test.
   [[ ${#all_tests[@]} -eq 0 ]] && quit 1 "There are no tests to execute!"
 
-  for next in "${all_tests[@]}"; do
+  for next in $(printf '%s\n' "${all_tests[@]}" | sort); do
+    [[ -s "${next}" ]] || {
+      echo -en "\n${YELLOW}[${next##*/}]${NC} WARN: Was not found on current dir. Retrying from HomeSetup/tests ..."
+      old_next="${next}"
+      next="${HHS_HOME}/tests/${next}"
+      [[ -s "${next}" ]] || {
+        echo -en "\n${RED}[${next##*/}] ${WHITE}ERROR: \"${old_next}\" is empty or not found!${NC}\n"
+        continue
+      }
+    }
     while read -r result; do
       if [[ ${result} =~ ${re_skip} ]]; then
         status="${YELLOW} ${SKIP_ICN} SKIP${NC}"
@@ -103,6 +116,7 @@ function tests() {
     echo -e " ${GREEN}${PASS_ICN}${NC}  ${WHITE}All Bats tests ${GREEN}PASSED${WHITE} in ${diff_time_sec}s ${diff_time_ms}ms ${NC}"
     quit 0
   fi
+
 }
 
 # @purpose: Run all terminal color palette tests.

@@ -100,7 +100,10 @@ if __hhs_has "hexdump"; then
         # More digits will be ignored
         uni="$(printf '%04s' "${hexa}")"
         [[ ${uni} =~ [0-9A-Fa-f]{4} ]] || continue
-        echo -e "[${HHS_HIGHLIGHT_COLOR}Unicode:'\u${uni}'${NC}]"
+        echo -en "[${HHS_HIGHLIGHT_COLOR}Unicode:'\u"
+        # shellcheck disable=SC2016
+        echo -n "${uni}"
+        echo -en "'${NC}]"
         converted=$(python3 -c "import struct; print(bytes.decode(struct.pack('<I', int('${uni}', 16)), 'utf_32_le'))" | hexdump -Cb)
         ret_val=$?
         result=$(awk '

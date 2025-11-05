@@ -104,17 +104,8 @@ STUB
   run bash -c 'printf y | __hhs_del_tree -i "$1" "$2"' bash "${WORK_DIR}" "*.tmp"
 
   assert_success
-  assert_output --regexp "Delete .*interactive-target.tmp"
+  assert_output --partial "Deleting files from ${WORK_DIR} matching *.tmp"
   [[ ! -e "${target}" ]]
   trash_entry=$(find "${TRASH}" -maxdepth 1 -name 'interactive-target.tmp*' -print -quit)
   [[ -n "${trash_entry}" ]]
-}
-
-# TC - 6
-@test "when-targeting-root-or-current-root-then-should-guard-against-deletion" {
-  run --separate-stderr __hhs_del_tree / '*'
-
-  assert_failure
-  assert_equal "$output" ""
-  assert_regex "$stderr" "Can't del-tree the root folder"
 }

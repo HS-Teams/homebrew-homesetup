@@ -101,7 +101,8 @@ function __hhs_del_tree() {
     fi
 
     search_path="$1"
-    glob="$2"
+    glob="${2:-*.*}"
+    echo -e "${BLUE}Deleting files from ${search_path} matching ${glob}${NC}"
     all=$(find -L "${search_path}" -name "${glob}" 2>/dev/null)
 
     if [[ -n "${all}" ]]; then

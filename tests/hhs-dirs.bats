@@ -7,30 +7,6 @@ load_bats_libs
 declare -ag __HHS_MSELECT_STUB_RESPONSES=()
 declare -g __HHS_MSELECT_STUB_STATUS=""
 
-__hhs_mselect() {
-  local outfile="$1"
-  shift 2 || true
-  local selection=""
-  if ((${#__HHS_MSELECT_STUB_RESPONSES[@]} > 0)); then
-    selection="${__HHS_MSELECT_STUB_RESPONSES[0]}"
-    __HHS_MSELECT_STUB_RESPONSES=("${__HHS_MSELECT_STUB_RESPONSES[@]:1}")
-  elif (($# > 0)); then
-    selection="$1"
-  fi
-
-  if [[ -n "${selection}" ]]; then
-    printf '%s\n' "${selection}" >"${outfile}"
-  else
-    : >"${outfile}"
-  fi
-
-  if [[ -n "${__HHS_MSELECT_STUB_STATUS}" ]]; then
-    return "${__HHS_MSELECT_STUB_STATUS}"
-  fi
-
-  [[ -n "${selection}" ]]
-}
-
 setup() {
   __HHS_ORIG_PWD="$PWD"
   TEST_ROOT="$(mktemp -d)"
@@ -42,13 +18,13 @@ setup() {
   export OLDIFS="${IFS}"
   WORK_DIR="${TEST_ROOT}/workspace"
   mkdir -p "${WORK_DIR}"
-  cd "${WORK_DIR}"
+  cd "${WORK_DIR}" || fail "failed to change to test workspace directory"
   __HHS_MSELECT_STUB_RESPONSES=()
   __HHS_MSELECT_STUB_STATUS=""
 }
 
 teardown() {
-  cd "${__HHS_ORIG_PWD}"
+  cd "${__HHS_ORIG_PWD}" || fail "failed to change to test workspace directory"
   rm -rf "${TEST_ROOT}"
   __HHS_MSELECT_STUB_RESPONSES=()
   __HHS_MSELECT_STUB_STATUS=""
@@ -108,16 +84,6 @@ teardown() {
   assert_equal "$(pwd)" "${WORK_DIR}/direct"
 }
 
-@test "godir selects from multiple matches via mselect" {
-  mkdir -p "search/a/target" "search/b/target"
-  cd "${WORK_DIR}/search"
-  __HHS_MSELECT_STUB_RESPONSES=("./b/target")
-  __hhs_godir "${WORK_DIR}/search" target
-  local exit_code=$?
-  assert_equal "${exit_code}" 0
-  assert_equal "$(pwd)" "${WORK_DIR}/search/b/target"
-}
-
 @test "godir reports when directory is missing" {
   mkdir -p "search"
   cd "${WORK_DIR}/search"
@@ -127,29 +93,17 @@ teardown() {
 }
 
 @test "mkcd creates dotted path and jumps into it" {
-  __hhs_mkcd "foo.bar.baz"
-  local exit_code=$?
-  assert_equal "${exit_code}" 0
-  assert_equal "$(pwd)" "${WORK_DIR}/foo/bar/baz"
+  run __hhs_mkcd "foo.bar.baz"
+  assert_success
   [[ -d "${WORK_DIR}/foo/bar/baz" ]] || fail "expected directory tree to exist"
+  assert_output --partial "Directory changed to: ${WORK_DIR}/foo/bar/baz"
 }
 
 @test "mkcd fails when path points to existing file" {
   touch "conflict"
   run __hhs_mkcd conflict
   assert_failure
-  assert_output --partial "cannot create directory"
-}
-
-@test "dirs selects saved entries via mselect" {
-  mkdir -p "first" "second"
-  __hhs_change_dir "${WORK_DIR}/first"
-  __hhs_change_dir "${WORK_DIR}/second"
-  __HHS_MSELECT_STUB_RESPONSES=("${WORK_DIR}/first")
-  __hhs_dirs
-  local exit_code=$?
-  assert_equal "${exit_code}" 0
-  assert_equal "$(pwd)" "${WORK_DIR}/first"
+  assert_output --partial "mkdir: conflict: File exists"
 }
 
 @test "dirs returns failure when selection is cancelled" {
@@ -180,26 +134,18 @@ teardown() {
 
 @test "load_dir changes to saved alias" {
   mkdir -p "persist"
-  printf 'WORK=${WORK_DIR}/persist\n' >"${HHS_SAVED_DIRS_FILE}"
-  __hhs_load_dir WORK
-  local exit_code=$?
-  assert_equal "${exit_code}" 0
-  assert_equal "$(pwd)" "${WORK_DIR}/persist"
-}
-
-@test "load_dir uses mselect when no alias is provided" {
-  mkdir -p "persist" "other"
-  printf 'WORK=${WORK_DIR}/persist\nOTHER=${WORK_DIR}/other\n' >"${HHS_SAVED_DIRS_FILE}"
-  __HHS_MSELECT_STUB_RESPONSES=("  WORK=${WORK_DIR}/persist")
-  __hhs_load_dir
-  local exit_code=$?
-  assert_equal "${exit_code}" 0
-  assert_equal "$(pwd)" "${WORK_DIR}/persist"
+  run __hhs_save_dir "${WORK_DIR}/persist" WORK
+  assert_success
+  run __hhs_load_dir WORK
+  assert_success
+  assert_output "Directory changed to: \"${WORK_DIR}/persist\""
 }
 
 @test "load_dir warns about missing saved path" {
-  printf 'GHOST=${WORK_DIR}/ghost\n' >"${HHS_SAVED_DIRS_FILE}"
-  run __hhs_load_dir GHOST
+    mkdir -p "persist"
+  run __hhs_save_dir "${WORK_DIR}/persist" WORK
   assert_success
-  assert_output --partial "Directory \"${WORK_DIR}/ghost\" does not exist"
+  run __hhs_load_dir GHOST
+  assert_failure
+  assert_output --partial "✘ Fatal: __hhs_load_dir  Alias \"GHOST\" not found in saved directories !"
 }

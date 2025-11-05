@@ -11,19 +11,20 @@ load "${HHS_FUNCTIONS_DIR}/hhs-toolcheck.bash"
 load_bats_libs
 
 setup_file() {
-  FIXTURE_BIN_DIR="${BATS_RUN_TMPDIR}/fixtures/bin"
-  mkdir -p "${FIXTURE_BIN_DIR}"
+  STUBS_DIR="${HHS_HOME}/tests/stubs"
   ORIGINAL_PATH="${PATH}"
-  export PATH="${FIXTURE_BIN_DIR}:${PATH}"
+  SAMPLE_VERSION_PATH="${STUBS_DIR}/sample-version"
+  chmod +x "${SAMPLE_VERSION_PATH}"
+  export PATH="${STUBS_DIR}:${PATH}"
 }
 
 teardown_file() {
   export PATH="${ORIGINAL_PATH}"
-  rm -rf "${FIXTURE_BIN_DIR}"
 }
 
 # Provide deterministic icons and OS label for output assertions.
 export HHS_MY_OS="TestOS"
+
 CHECK_ICN="[ok]"
 ALIAS_ICN="[alias]"
 FUNC_ICN="[func]"
@@ -101,29 +102,6 @@ setup() {
   STUB_COMMAND_PATHS=()
   STUB_ALIAS_BODIES=()
   OLDIFS="${IFS}"
-
-  SAMPLE_VERSION_PATH="${FIXTURE_BIN_DIR}/sample-version"
-  cat <<'EOF' >"${SAMPLE_VERSION_PATH}"
-#!/usr/bin/env bash
-
-case "$1" in
-  --version)
-    echo "sample-version 1.0.0"
-    exit 0
-    ;;
-  -v)
-    echo "sample-version v1.0.0"
-    exit 0
-    ;;
-  -V)
-    echo "sample-version V1.0.0"
-    exit 0
-    ;;
-esac
-
-exit 1
-EOF
-  chmod +x "${SAMPLE_VERSION_PATH}"
 }
 
 teardown() {
@@ -210,12 +188,12 @@ stub_missing_tool() {
   run __hhs_toolcheck -q "missing-tool"
 
   assert_failure
-  assert_output --empty
+  assert_output ""
 }
 
 # TC - 7
 @test "when-checking-version-of-installed-tool-then-shows-version" {
-  stub_path_tool "sample-version" "${FIXTURE_BIN_DIR}/sample-version"
+  stub_path_tool "sample-version" "${STUBS_DIR}/sample-version"
 
   run __hhs_version "sample-version"
 

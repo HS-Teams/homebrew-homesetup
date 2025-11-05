@@ -87,6 +87,7 @@ run_check_ip() {
     "${args[@]}"
 }
 
+# TC - 1
 @test "valid private class C address reports expected metadata" {
   run_check_ip 192.168.0.10
 
@@ -96,6 +97,7 @@ run_check_ip() {
   assert_output --partial 'Scope: Private'
 }
 
+# TC - 2
 @test "invalid address exits with failure and logs error" {
   export CHECK_IP_ERR_LOG="${CHECK_IP_TMPDIR}/error.log"
 
@@ -107,6 +109,7 @@ run_check_ip() {
   assert_output --partial 'Invalid IP: 999.10.0.1'
 }
 
+# TC - 3
 @test "172.15.x.x is public while 172.16.x.x is private" {
   run_check_ip 172.15.1.1
 
@@ -119,6 +122,7 @@ run_check_ip() {
   assert_output --partial 'Scope: Private'
 }
 
+# TC - 4
 @test "reserved range keeps limited broadcast distinct" {
   run_check_ip 240.0.0.1
 
@@ -131,6 +135,7 @@ run_check_ip() {
   assert_output --partial 'Scope: Limited Broadcast'
 }
 
+# TC - 5
 @test "--info triggers info lookup output" {
   export CHECK_IP_INFO_LOG="${CHECK_IP_TMPDIR}/info.log"
 

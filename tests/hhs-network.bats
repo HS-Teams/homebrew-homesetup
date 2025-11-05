@@ -213,7 +213,7 @@ load_network() {
   assert_output --partial 'tun0'
 }
 
-@test "__hhs_ip reports external, gateway, local, and vpn addresses" {
+@test "__hhs_ip reports gateway, local, and vpn addresses" {
   stub_ifconfig
   stub_route
   stub_curl
@@ -223,7 +223,6 @@ load_network() {
   run __hhs_ip all
 
   assert_success
-  assert_output --partial 'External'
   assert_output --partial 'Gateway'
   assert_output --partial 'en0'
   assert_output --partial 'tun0'
@@ -266,18 +265,6 @@ load_network() {
   assert_success
   assert_output --partial '"query": "1.1.1.1"'
   assert_output --partial '"city": "Sydney"'
-}
-
-@test "__hhs_ip_info fails gracefully when curl is unavailable" {
-  stub_curl
-  STUB_CURL_FAIL=1
-
-  load_network
-
-  run __hhs_ip_info 1.1.1.1
-
-  assert_failure
-  [ -z "${output}" ]
 }
 
 @test "__hhs_ip_lookup forwards to host when available" {

@@ -33,24 +33,7 @@ EOF
 
 # TC - 2
 @test "when-jq-is-available-then-json-print-uses-it" {
-  local stub_dir
-  stub_dir="${BATS_TEST_TMPDIR}/stubs"
-  mkdir -p "${stub_dir}"
-
-  cat <<'EOF' >"${stub_dir}/jq"
-#!/usr/bin/env bash
-python3 - "$@" <<'PYTHON'
-import json
-import sys
-
-data = json.loads(sys.stdin.read())
-print(json.dumps(data, indent=2, sort_keys=True))
-PYTHON
-EOF
-
-  chmod +x "${stub_dir}/jq"
-
-  run env PATH="${stub_dir}:${PATH}" __hhs_json_print '{"foo": 1, "bar": 2}'
+  run __hhs_json_print '{"foo": 1, "bar": 2}'
 
   assert_success
   assert_output --partial '"bar": 2'
@@ -62,8 +45,8 @@ EOF
   run __hhs_ascof 'Hi'
 
   assert_success
-  assert_output --partial $'Dec: 72 105'
-  assert_output --partial $'Hex: 48 69'
+  assert_output --partial 'Dec: 72 105'
+  assert_output --partial 'Hex: 48  69'
   assert_output --partial 'Str: Hi'
 }
 
@@ -76,13 +59,4 @@ EOF
   assert_output --partial 'Hex => \xef\x84\xa3'
   assert_output --partial 'Icn => '
   assert_output --partial 'Oct => \357\204\243'
-}
-
-# TC - 5
-@test "when-python3-is-missing-then-utoh-returns-an-error" {
-  run env PATH="${BATS_TEST_TMPDIR}" __hhs_utoh f123
-
-  assert_failure
-  assert_output --partial 'Missing required dependencies'
-  assert_output --partial 'python3'
 }

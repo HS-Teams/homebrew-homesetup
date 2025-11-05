@@ -31,7 +31,7 @@ function __hhs_command() {
     echo '      -e | --edit   : Edit the commands file.'
     echo '      -a | --add    : Store a command.'
     echo '      -r | --remove : Remove a command.'
-    echo '      -l | --list   : List all stored commands.'
+    echo '      -l | --list   : List all saved commands.'
     echo ''
     echo '  Notes: '
     echo '    MSelect default : When no arguments is provided, a menu with options will be displayed.'
@@ -57,7 +57,7 @@ function __hhs_command() {
       all_cmds+=("Command ${cmd_name}: ${cmd_expr}")
       printf "%s\n" "${all_cmds[@]}" >"${HHS_CMD_FILE}"
       sort -u "${HHS_CMD_FILE}" -o "${HHS_CMD_FILE}"
-      echo "${GREEN}Command stored: ${WHITE}\"${cmd_name}\" as ${HHS_HIGHLIGHT_COLOR}${cmd_expr} ${NC}"
+      echo "${GREEN}Command saved: ${WHITE}\"${cmd_name}\" as ${HHS_HIGHLIGHT_COLOR}${cmd_expr} ${NC}"
       ret_val=0
       ;;
     -r | --remove)
@@ -66,16 +66,21 @@ function __hhs_command() {
       cmd_alias=$(echo -en "$1" | tr -s '[:space:]' '_' | tr '[:lower:]' '[:upper:]')
       local re='^[1-9]+$'
       if [[ ${cmd_alias} =~ $re ]]; then
+        # Remove by index
         cmd_expr=$(awk "NR==$1" "${HHS_CMD_FILE}" | awk -F ': ' '{ print $0 }')
         [[ -z "${cmd_expr}" ]] && __hhs_errcho "${FUNCNAME[0]}" "Command index not found: \"${cmd_alias}\"" && return 1
-        ised -e "/^${cmd_expr}$/d" "${HHS_CMD_FILE}"
-        echo "${YELLOW}Command ${WHITE}(${cmd_alias})${NC} removed !"
+        ised -e "/^${cmd_expr}$/d" "${HHS_CMD_FILE}" && {
+          echo "${YELLOW}Command ${WHITE}(${cmd_alias})${NC} removed!"
+          ret_val=0
+        }
       elif [[ -n "${cmd_alias}" ]]; then
+        # Remove by alias
         cmd_expr=$(grep "${cmd_alias}" "${HHS_CMD_FILE}")
         [[ -z "${cmd_expr}" ]] && __hhs_errcho "${FUNCNAME[0]}" "Command not found: \"${cmd_alias}\"" && return 1
-        ised -e "s#(^Command ${cmd_alias}: .*)*##g" -e '/^\s*$/d' "${HHS_CMD_FILE}"
-        echo "${YELLOW}Command removed: ${WHITE}\"${cmd_alias}\" ${NC}"
-        ret_val=0
+        ised -e "/^Command ${cmd_alias}:.*/d" "${HHS_CMD_FILE}" && {
+          echo "${YELLOW}Command ${WHITE}\"${cmd_alias}\"${NC} removed!"
+          ret_val=0
+        }
       else
         __hhs_errcho "${FUNCNAME[0]}" "Invalid arguments: \"${cmd_alias}\"\t\"${cmd_expr}\""
       fi
@@ -86,7 +91,7 @@ function __hhs_command() {
         pad_len=35
         columns="$(($(tput cols) - pad_len - col_offset))"
         echo ' '
-        echo "${YELLOW}Available commands (${#all_cmds[@]}) stored:"
+        echo "${YELLOW}Available commands (${#all_cmds[@]}):"
         echo ' '
         IFS=$'\n'
         for next in "${all_cmds[@]}"; do
@@ -95,7 +100,7 @@ function __hhs_command() {
           cmd_expr="$(echo -en "${next}" | awk -F ': ' '{ print $2 }')"
           echo -n "${HHS_HIGHLIGHT_COLOR}${cmd_name}${WHITE}"
           printf '%*.*s' 0 $((pad_len - ${#cmd_name})) "${pad}"
-          echo -n "${GREEN} is stored as: ${WHITE}'${cmd_expr:0:${columns}}'"
+          echo -n "${GREEN} is saved as: ${WHITE}'${cmd_expr:0:${columns}}'"
           [[ ${#cmd_expr} -ge ${columns} ]] && echo -n "..."
           echo -e "${NC}"
           index=$((index + 1))
@@ -111,7 +116,7 @@ function __hhs_command() {
       if [[ ${#all_cmds[@]} -ne 0 ]]; then
         clear
         mselect_file=$(mktemp)
-        if __hhs_mselect "${mselect_file}" "Available commands (${#all_cmds[@]}) stored:" "${all_cmds[@]}"; then
+        if __hhs_mselect "${mselect_file}" "Available commands (${#all_cmds[@]}) saved:" "${all_cmds[@]}"; then
           sel_cmd=$(grep . "${mselect_file}")
           cmd_expr="${sel_cmd##*: }"
           [[ -n "${cmd_expr}" ]] && echo "#> ${cmd_expr}" && eval "${cmd_expr}" && ret_val=$?
