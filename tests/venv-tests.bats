@@ -19,7 +19,6 @@ PIP3="${PYTHON3} -m pip"
 
 # TC - 1
 @test "after-installation-homesetup-venv-should-be-properly-activate" {
-  skip "pending fix"
   run test -n "${VIRTUAL_ENV}"
   [ "$status" -eq 0 ]
   [[ "${VIRTUAL_ENV}" =~ ${HHS_VENV_PATH} ]]
@@ -27,7 +26,6 @@ PIP3="${PYTHON3} -m pip"
 
 # TC - 2
 @test "after-installation-hspylib-modules-should-report-their-versions" {
-  skip "pending fix"
   declare -a modules=(
     'hspylib'
     'hspylib-datasource'
