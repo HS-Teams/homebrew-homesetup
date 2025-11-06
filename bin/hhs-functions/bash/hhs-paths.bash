@@ -162,7 +162,7 @@ function __hhs_paths() {
       type_prefix=" "
     fi
 
-    visible_path="${type_prefix}${path}"
+    visible_path="${path}"
 
     # Truncate and add ellipsis
     if (( truncate )) && [[ ${#visible_path} -gt truncate_col ]]; then
@@ -171,18 +171,18 @@ function __hhs_paths() {
 
     # Padding is based on full visible string (icon + path + ellipsis)
     printf -v pad_space '%*s' $((pad_len - ${#visible_path})) ''
-    echo -en "${HHS_HIGHLIGHT_COLOR}${visible_path}${pad_space// /${PAD_CHAR}}"
+    echo -en "${WHITE}${type_prefix}${HHS_HIGHLIGHT_COLOR}${visible_path}${pad_space// /${PAD_CHAR}}"
 
     # Existence marker
     if [[ -d "${path_raw}" ]]; then
-      echo -en "${GREEN} ${CHECK_ICN} => ${WHITE}"
+      echo -en "${GREEN} ${CHECK_ICN}  ${WHITE}"
     else
       if [[ "${clean}" -eq 1 ]]; then
         ised -e "s#(^${path_raw}$)*##g" -e '/^\s*$/d' "${HHS_PATHS_FILE}"
         export PATH="${PATH//${path_raw}:/}"
-        echo -en "${RED} ${CROSS_ICN} => "
+        echo -en "${RED} ${CROSS_ICN}  "
       else
-        echo -en "${ORANGE} ${CROSS_ICN} => "
+        echo -en "${ORANGE} ${CROSS_ICN}  "
       fi
     fi
 

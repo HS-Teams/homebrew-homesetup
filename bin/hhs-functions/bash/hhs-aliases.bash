@@ -89,7 +89,7 @@ function __hhs_aliases() {
             expr=$(echo -en "${next}" | cut -d'=' -f2-)
             printf "%s" "${HHS_HIGHLIGHT_COLOR}${name//alias /}${NC}"
             printf '%*.*s' 0 $((pad_len - ${#name})) "${pad}"
-            echo -en "${GREEN} is aliased to ${WHITE}${expr:0:${columns}}"
+            echo -en "${GREEN}  ${WHITE}${expr:0:${columns}}"
           else
             echo -en "${ORANGE}${next:0:${columns}}${NC}"
           fi

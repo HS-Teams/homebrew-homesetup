@@ -102,7 +102,7 @@ function __hhs_about() {
     IFS="${OLDIFS}"
     if [[ ${#type_ret[@]} -gt 0 ]]; then
       if [[ ${type_ret[0]} =~ ${re_alias} ]]; then
-        printf "${GREEN}%14s${BLUE} %s${WHITE} => %s ${NC}\n" "Aliased:" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+        printf "${GREEN}%14s${BLUE} %s${WHITE}  %s ${NC}\n" "Aliased:" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
         # To avoid unalias the command, we do that in another subshell
         (
           IFS=$'\n'
@@ -118,12 +118,12 @@ function __hhs_about() {
           IFS="${OLDIFS}"
         )
       elif [[ ${type_ret[0]} =~ ${re_function} ]]; then
-        printf "${GREEN}%14s${BLUE} %s${WHITE} => \n" "Function:" "${BASH_REMATCH[1]}"
+        printf "${GREEN}%14s${BLUE} %s${WHITE}  \n" "Function:" "${BASH_REMATCH[1]}"
         printf "%s\n" "${type_ret[@]:2}" | nl
       elif [[ ${type_ret[0]} =~ ${re_command} ]]; then
-        printf "${GREEN}%14s${BLUE} %s${WHITE} => %s ${NC}\n" "Command:" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+        printf "${GREEN}%14s${BLUE} %s${WHITE}  %s ${NC}\n" "Command:" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
         brew_cmd="$(brew --prefix "${cmd}" 2>/dev/null)"
-        [[ -n "${brew_cmd}" ]] && printf "${GREEN}%14s${BLUE} %s${WHITE} => %s\n" "Brew:" "prefix" "${brew_cmd}"
+        [[ -n "${brew_cmd}" ]] && printf "${GREEN}%14s${BLUE} %s${WHITE}  %s\n" "Brew:" "prefix" "${brew_cmd}"
       fi
     fi
     [[ ${recurse} -eq 0 ]] && echo -e "${NC}"
@@ -164,7 +164,7 @@ function __hhs_defs() {
         if [[ ${name} =~ ${filter} ]]; then
           echo -en "${HHS_HIGHLIGHT_COLOR}${name//__hhs_alias/}${NC} "
           printf '%*.*s' 0 $((pad_len - ${#name})) "${pad}"
-          echo -en "${GREEN} defined as => ${NC}"
+          echo -en "${GREEN} defined as  ${NC}"
           echo -n "${value:0:${columns}}"
           [[ ${#value} -ge ${columns} ]] && echo -n "..."
           echo "${NC}"
@@ -217,7 +217,7 @@ function __hhs_envs() {
           if [[ ${name} =~ ${filter} ]]; then
             echo -en "${HHS_HIGHLIGHT_COLOR}${name}${NC} "
             printf '%*.*s' 0 $((pad_len - ${#name})) "${pad}"
-            echo -en " ${GREEN}=> ${NC}${value:0:${columns}}"
+            echo -en " ${GREEN} ${NC}${value:0:${columns}}"
             [[ ${#value} -ge ${columns} ]] && echo -n "..."
             echo -e "${NC}"
           fi
@@ -253,16 +253,16 @@ function __hhs_venv() {
   active="$(__hhs_is_venv && echo -e "${GREEN}Active")"
   active="${active:-${RED}Inactive}"
 
-  [[ -z "${enable}" ]] && { echo -e "${WHITE}Virtual environment is ${active} ${YELLOW}[$(python3 -V)] -> $(command -v python3)."; return 0; }
+  [[ -z "${enable}" ]] && { echo -e "${WHITE}Virtual environment is ${active} ${YELLOW}[$(python3 -V)]  $(command -v python3)."; return 0; }
 
   if [[ "${enable}" =~ -d|-t ]] && declare -F deactivate &> /dev/null; then
     deactivate && \
-      { echo -e "${WHITE}Virtual environment ${RED}deactivated ${YELLOW}[$(python3 -V)] -> $(command -v python3)."; ret_val=0; }
+      { echo -e "${WHITE}Virtual environment ${RED}deactivated ${YELLOW}[$(python3 -V)]  $(command -v python3)."; ret_val=0; }
   elif [[ "${enable}" =~ -a|-t ]] && ! declare -F deactivate &> /dev/null; then
     source "${HHS_VENV_PATH}"/bin/activate &> /dev/null && \
-      { echo "${WHITE}Virtual environment ${GREEN}activated ${YELLOW}[$(python3 -V)] -> $(command -v python3)."; ret_val=0; }
+      { echo "${WHITE}Virtual environment ${GREEN}activated ${YELLOW}[$(python3 -V)]  $(command -v python3)."; ret_val=0; }
   else
-    echo -e "${WHITE}Virtual environment is ${active} ${YELLOW}[$(python3 -V)] -> $(command -v python3)."
+    echo -e "${WHITE}Virtual environment is ${active} ${YELLOW}[$(python3 -V)]  $(command -v python3)."
   fi
 
   echo -e "${NC}"

@@ -100,7 +100,7 @@ function __hhs_command() {
           cmd_expr="$(echo -en "${next}" | awk -F ': ' '{ print $2 }')"
           echo -n "${HHS_HIGHLIGHT_COLOR}${cmd_name}${WHITE}"
           printf '%*.*s' 0 $((pad_len - ${#cmd_name})) "${pad}"
-          echo -n "${GREEN} is saved as: ${WHITE}'${cmd_expr:0:${columns}}'"
+          echo -n "${GREEN}  ${WHITE}'${cmd_expr:0:${columns}}'"
           [[ ${#cmd_expr} -ge ${columns} ]] && echo -n "..."
           echo -e "${NC}"
           index=$((index + 1))

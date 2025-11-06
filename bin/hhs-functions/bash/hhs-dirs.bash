@@ -282,7 +282,7 @@ function __hhs_load_dir() {
             dir=$(echo -en "${next}" | awk -F '=' '{ print $2 }')
             printf "%s" "${HHS_HIGHLIGHT_COLOR}${dir_alias}${WHITE}"
             printf '%*.*s' 0 $((pad_len - ${#dir_alias})) "${pad}"
-            echo -e "${GREEN} points to ${WHITE}'${dir}'"
+            echo -e "${GREEN}  ${WHITE}'${dir}'"
           done
           echo "${NC}"
           ret_val=0
