@@ -29,5 +29,6 @@ if __hhs_has "gradle"; then
 
     return $?
   }
-
+else
+    __hhs_log WARN "Gradle is not installed on your system."
 fi

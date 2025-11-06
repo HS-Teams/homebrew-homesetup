@@ -111,8 +111,7 @@ if __hhs_has "hexdump"; then
         NR == 2 {printf "  Oct => "; print "\\"$2"\\"$3"\\"$4}
         NR == 1 {printf "  Icn => "; print "\\x"$2"\\x"$3"\\x"$4}
         ' <<<"${converted}")
-        echo -e "${GREEN}${result}${NC}"
-        echo ''
+        echo -e "${GREEN}${result}${NC}\n"
       done
     fi
 

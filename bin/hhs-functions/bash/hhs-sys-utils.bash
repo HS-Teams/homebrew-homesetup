@@ -181,7 +181,7 @@ function __hhs_process_list() {
         fi
       done
     else
-      echo -e "\n${YELLOW}No active PIDs for process named: \"$1\""
+      echo -e "\n${ORANGE}No active PIDs for process named: \"$1\""
     fi
   fi
 

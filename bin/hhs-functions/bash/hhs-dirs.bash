@@ -306,7 +306,7 @@ function __hhs_load_dir() {
             fi
             [[ -f "${mselect_file}" ]] && \rm -f "${mselect_file}"
           else
-            echo "${YELLOW}No directories available yet !${NC}"
+            echo "${ORANGE}No directories available yet !${NC}"
           fi
           ;;
         [a-zA-Z0-9_]*)
@@ -336,7 +336,7 @@ function __hhs_load_dir() {
         return 1
       fi
     else
-      echo "${YELLOW}No directories saved yet: \"${HHS_SAVED_DIRS_FILE}\" !"
+      echo "${ORANGE}No directories saved yet: \"${HHS_SAVED_DIRS_FILE}\" !"
       return 1
     fi
     echo "${NC}"
@@ -370,7 +370,7 @@ function __hhs_godir() {
     len=${#found_dirs[@]}
     # If no directory is found under the specified name
     if [[ ${len} -eq 0 ]]; then
-      echo "${YELLOW}No matches for directory with name \"${search_name}\" found in \"${search_path}\" !${NC}"
+      echo "${ORANGE}No matches for directory with name \"${search_name}\" found in \"${search_path}\" !${NC}"
     # If there was only one directory found, CD into it
     elif [[ ${len} -eq 1 ]]; then
       dir=${found_dirs[0]}
@@ -420,14 +420,14 @@ function __hhs_mkcd() {
     dir_tree="${1//.//}"
     dir_tree="${dir_tree//-//}"
     \mkdir -p "${dir_tree}" || {
-      echo -e "${RED}   Failed to change into directory: ${WHITE}${dir}${NC}"
+      __hhs_errcho "${FUNCNAME[0]}" "   Failed to change into directory: ${WHITE}${dir}"
       return 1
     }
     last_pwd=$(pwd)
     IFS=$'/'
     for dir in ${dir_tree}; do
       \cd "${dir}" || {
-      echo -e "${RED}   Failed to change into directory: ${WHITE}${dir}${NC}"
+      __hhs_errcho "${FUNCNAME[0]}" "   Failed to change into directory: ${WHITE}${dir}"
       return 1
     }
     done

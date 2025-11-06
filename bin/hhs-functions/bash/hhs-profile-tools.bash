@@ -78,14 +78,15 @@ if [[ -z "${HHS_HAS_DOCKER}" ]]; then
   function __hhs_activate_docker() {
 
     DK_LOC='/Applications/Docker.app'
-    # Docker daemon setup
+    # Docker desktop daemon setup
     if [[ -f ${DK_LOC} ]]; then
-      echo -en "Activating Docker..."
+      echo -en "Activating Docker desktop..."
       if open "${DK_LOC}" &>/dev/null; then
         echo "${GREEN} OK${NC}" && return 0
       fi
+    # Docker and Colima setup
     elif __hhs_has 'colima' && __hhs_has 'docker'; then
-      echo -en "Activating Colima..."
+      echo -en "Activating Colima + Docker..."
       if colima start &>/dev/null; then
         echo "${GREEN} OK${NC}" && return 0
       fi

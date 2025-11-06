@@ -109,7 +109,7 @@ function __hhs_command() {
         echo -e "${NC}"
         ret_val=0
       else
-        echo "${YELLOW}No commands were found in \"${HHS_CMD_FILE}\" !${NC}"
+        echo "${ORANGE}No commands were found in \"${HHS_CMD_FILE}\" !${NC}"
       fi
       ;;
     $'')

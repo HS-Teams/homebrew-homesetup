@@ -29,7 +29,7 @@ if __hhs_has ifconfig; then
     IFS="${OLDIFS}"
 
     if [[ ${#all_ifaces[@]} == 0 ]]; then
-      echo "${YELLOW}No active interfaces found !${NC}"
+      echo "${ORANGE}No active interfaces found !${NC}"
       return 1
     elif [[ ${#all_ifaces[@]} -gt 0 && ${*} =~ -flat ]]; then
       for iface in "${all_ifaces[@]}"; do

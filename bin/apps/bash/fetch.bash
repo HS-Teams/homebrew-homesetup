@@ -88,14 +88,14 @@ RESPONSE=
 STATUS=0
 
 # @purpose: Trim leading and trailing whitespace.
-function trim_whitespace() {
+trim_whitespace() {
   local trimmed
   trimmed="$(printf '%s' "${1}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   printf '%s' "${trimmed}"
 }
 
 # @purpose: Do the request according to the method
-function fetch_with_curl() {
+fetch_with_curl() {
 
   aux=$(mktemp)
 
@@ -145,7 +145,10 @@ parse_args() {
       METHOD="$(tr '[:lower:]' '[:upper:]' <<< "${1}")"
       shift
       ;;
-    *) quit 2 "Method \"${1}\" is not not valid!" ;;
+    *)
+      __hhs_errcho "${APP_NAME}" "Method \"${1}\" is not not valid!"
+      quit 2
+      ;;
   esac
   shopt -u nocasematch
 
@@ -199,10 +202,16 @@ main() {
 
   case "${METHOD}" in
     'GET' | 'HEAD' | 'DELETE')
-      [[ -n "${BODY}" ]] && quit 1 "${METHOD} does not accept a body"
+      [[ -n "${BODY}" ]] && {
+        __hhs_errcho "${APP_NAME}" "${METHOD} does not accept a body"
+        quit 1
+      }
       ;;
     'PUT' | 'POST' | 'PATCH')
-      [[ -z "${BODY}" ]] && quit 1 "${METHOD} requires a body"
+      [[ -z "${BODY}" ]] && {
+        __hhs_errcho "${APP_NAME}" "${METHOD} requires a body"
+        quit 1
+      }
       ;;
   esac
 

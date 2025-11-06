@@ -221,7 +221,7 @@ main() {
       [[ ${EXTRA_INFO} -eq 0 ]] || __hhs_ip_info "${IP_ADDRESS}"
     fi
   else
-    [[ ${SILENT} -eq 0 ]] && __hhs_errcho "Invalid IP: ${IP_ADDRESS}"
+    [[ ${SILENT} -eq 0 ]] && __hhs_errcho "${APP_NAME}" "Invalid IP: ${IP_ADDRESS}"
   fi
 }
 

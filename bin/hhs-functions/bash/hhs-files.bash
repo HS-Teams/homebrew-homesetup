@@ -129,7 +129,7 @@ function __hhs_del_tree() {
       fi
     else
       echo ' '
-      echo "${YELLOW}No files or folders matching \"${glob}\" were found in \"$1\" !${NC}"
+      echo "${ORANGE}No files or folders matching \"${glob}\" were found in \"$1\" !${NC}"
       echo ' '
     fi
   fi

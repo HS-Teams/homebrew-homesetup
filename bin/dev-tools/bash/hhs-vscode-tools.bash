@@ -36,5 +36,6 @@ if __hhs_has "code"; then
 
     return $?
   }
-
+else
+    __hhs_log WARN "VSCode is not installed on your system."
 fi

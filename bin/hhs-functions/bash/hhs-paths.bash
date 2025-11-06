@@ -195,16 +195,16 @@ function __hhs_paths() {
     [[ -d "${PATHS_D}" ]] && path_dir="$(find "${PATHS_D}" -type f -exec cat {} \; | grep -Fx -- "${path_raw}")"
 
     if [[ -n "${custom}" ]]; then
-      echo -n "${YELLOW}Custom path${NC}"
+      echo -n "${BLUE}Custom path"
     elif [[ -n "${path_dir}" ]]; then
-      echo -n "${YELLOW}Private system path (${PATHS_D})${NC}"
+      echo -n "${VIOLET}Private system path (${PATHS_D})"
     elif [[ -n "${private}" ]]; then
-      echo -n "${YELLOW}General system path (${PVT_PATHS_D})${NC}"
+      echo -n "${VIOLET}General system path (${PVT_PATHS_D})"
     else
-      echo -n "Shell export"
+      echo -n "${WHITE}Shell export"
     fi
-
     echo -e "${NC}"
+
   done
 
   echo -e "${NC}"

@@ -155,5 +155,6 @@ if [[ -n "${HHS_HAS_DOCKER}" ]]; then
 
     return 1
   }
-
+else
+  __hhs_log WARN "Docker is not installed or not running on your system."
 fi
