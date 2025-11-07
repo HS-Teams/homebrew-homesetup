@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1117,SC1090
 
 #  Script: install.bash
 # Purpose: Install and configure HomeSetup
@@ -37,7 +36,7 @@ usage: $APP_NAME [OPTIONS] <args>
   # Define USER and HOME variables
   if [[ -n "${SUDO_USER}" ]]; then
     USER="${SUDO_USER}"
-    HOME="$(eval echo ~"${SUDO_USER}")"
+    HOME="$(getent passwd "${SUDO_USER}" | cut -d: -f6)"
     has sudo && SUDO=sudo
   else
     USER="${USER:-$(whoami)}"
@@ -75,8 +74,10 @@ usage: $APP_NAME [OPTIONS] <args>
   NC='\033[m'
 
   touch "${INSTALL_LOG}"
-  [[ -f "${INSTALL_LOG}" ]] || quit 1 "Unable initialize installation logs -> ${INSTALL_LOG}"
-  [[ -f "${INSTALL_LOG}" ]] && echo -e "${ORANGE}Installation logs can be accessed here: ${BLUE}${INSTALL_LOG}${NC}"
+  [[ -f "${INSTALL_LOG}" ]] ||
+    quit 1 "Unable initialize installation logs -> ${INSTALL_LOG}"
+  [[ -f "${INSTALL_LOG}" ]] &&
+    echo -e "${ORANGE}Installation logs: ${BLUE}${INSTALL_LOG}${NC}"
 
   # HomeSetup GitHub repository URL
   GITHUB_URL='https://github.com/yorevs/homesetup.git'
@@ -126,6 +127,9 @@ usage: $APP_NAME [OPTIONS] <args>
   # Python executable
   PYTHON3="${PYTHON3:-$(command -v python3.11)}"
 
+  # Fallback for python3.11
+  PYTHON3="${PYTHON3:-$(command -v python3)}"
+
   # Pip executable
   PIP3="${PIP3:-${PYTHON3} -m pip}"
 
@@ -144,6 +148,8 @@ usage: $APP_NAME [OPTIONS] <args>
     'hspylib-vault'
     'hspylib-firebase'
     'bumpver'
+    'setuptools'
+    'wheel'
   )
 
   # User's operating system
@@ -181,7 +187,7 @@ usage: $APP_NAME [OPTIONS] <args>
   quit() {
 
     log_count=15
-    unset -f "${UNSETS[*]}"
+    for fn in "${UNSETS[@]}"; do unset -f "${fn}"; done
     exit_code=${1:-0}
     last_log_lines="  Last (${log_count}) log lines:\n$(tail -n ${log_count} "${INSTALL_LOG}" |
       sed '/^[[:space:]]*$/d; s/^/  => /' | nl)"
@@ -461,7 +467,7 @@ usage: $APP_NAME [OPTIONS] <args>
       DEPENDENCIES+=('sudo' 'file' 'make' 'automake' 'gcc' 'gcc-c++' 'kernel-devel' 'python3' 'python3-pip')
       [[ -n "${INSTALL_AI}" ]] &&
         DEPENDENCIES+=('ffmpeg' 'python3-pyaudio' 'portaudio-devel' 'redhat-rpm-config' 'file-devel')
-      update="dnf -y update"
+      update="dnf update -y"
       install="dnf install -y"
       check_pkg="rpm -qa"
     # Alpine: Busybox
@@ -599,7 +605,7 @@ usage: $APP_NAME [OPTIONS] <args>
         ${SUDO} eval "$("$(brew --prefix)"/bin/brew shellenv)"
       fi
       BREW="$(brew --prefix)/bin/brew"
-      if command -v brew >>"${INSTALL_LOG}" 2>&1; then
+      if has brew >>"${INSTALL_LOG}" 2>&1; then
         echo -e "\n${GREEN}@@@ Successfully installed HomeBrew -> ${BREW}${NC}"
       else
         quit 2 "### Could not find HomeBrew installation !"
@@ -1116,7 +1122,7 @@ usage: $APP_NAME [OPTIONS] <args>
 
   # Install Starship prompt
   configure_starship() {
-    if ! command -v starship >>"${INSTALL_LOG}" 2>&1; then
+    if ! has starship >>"${INSTALL_LOG}" 2>&1; then
       echo -en "\n${WHITE}Installing Starship prompt... "
       if \curl -sSL "https://starship.rs/install.sh" 1>"${HHS_DIR}/install_starship.sh" &&
         \chmod a+x "${HHS_DIR}"/install_starship.sh &&
@@ -1131,7 +1137,7 @@ usage: $APP_NAME [OPTIONS] <args>
 
   # Install GTrash application
   configure_gtrash() {
-    if ! command -v gtrash >>"${INSTALL_LOG}" 2>&1; then
+    if ! has gtrash >>"${INSTALL_LOG}" 2>&1; then
       arch=$(uname -m)
       arch="${arch//aarch64/arm64}"
       echo -en "\n${WHITE}Installing ${BLUE}GTrash${NC} app... "
@@ -1178,8 +1184,6 @@ usage: $APP_NAME [OPTIONS] <args>
   activate_dotfiles() {
 
     JOB_NAME='HomeSetup restart!' PYTHON3="${VENV_PYTHON3}" source "${HOME}/.bashrc"
-    PYTHON3="${PYTHON3:-$(command -v python3.11)}"
-    PIP3="${PIP3:-${PYTHON3} -m pip}"
 
     # Set the auto-update timestamp.
     if [[ "${OS_TYPE}" == "macOS" ]]; then
@@ -1188,8 +1192,6 @@ usage: $APP_NAME [OPTIONS] <args>
       date -d "@$(($(date +%s) - 3 * 24 * 60 * 60))" '+%s%S' 1>"${HHS_DIR}/.last_update" 2>>"${INSTALL_LOG}"
     elif [[ "${OS_TYPE}" =~ Debian|RedHat ]]; then
       date -d '+7 days' '+%s%S' 1>"${HHS_DIR}/.last_update" 2>>"${INSTALL_LOG}"
-    else
-      date '+%s' 1>"${HHS_DIR}/.last_update" 2>>"${INSTALL_LOG}"
     fi
 
     echo ''
@@ -1224,8 +1226,7 @@ usage: $APP_NAME [OPTIONS] <args>
     quit 2 'Installation aborted !'
   }
 
-  trap abort_install SIGINT
-  trap abort_install SIGABRT
+  trap abort_install SIGINT SIGABRT
 
   [[ "${1}" == "-h" || "${1}" == "--help" ]] && usage
 
