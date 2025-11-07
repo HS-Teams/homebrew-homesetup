@@ -442,28 +442,28 @@ usage: $APP_NAME [OPTIONS] <args>
       [[ -n "${INSTALL_AI}" ]] &&
         DEPENDENCIES+=('ffmpeg' 'portaudio' 'libmagic')
       update="brew update"
-      install="brew install -f"
-      check_pkg="brew list "
+      install="brew install"
+      check_pkg="brew list --formula"
     # Debian: Ubuntu
-    elif has 'apt-get'; then
+    elif has apt; then
       OS_TYPE='Debian'
-      OS_APP_MAN='apt-get'
+      OS_APP_MAN='apt'
       DEPENDENCIES+=('sudo' 'file' 'build-essential' 'python3' 'python3-pip')
       [[ -n "${INSTALL_AI}" ]] &&
-        DEPENDENCIES+=('ffmpeg' 'python3-pyaudio' 'portaudio19-dev' 'libasound-dev' 'libmagic-dev')
-      update="apt update"
-      install="apt install -y"
-      check_pkg="apt list --installed | grep"
+        DEPENDENCIES+=( 'ffmpeg' 'python3-pyaudio' 'portaudio19-dev' 'libasound-dev' 'libmagic-dev')
+      update="apt-get update -y"
+      install="apt-get install -y --no-install-recommends"
+      check_pkg="dpkg -l"
     # RedHat: Fedora, CentOS
-    elif has 'yum'; then
+    elif has dnf; then
       OS_TYPE='RedHat'
-      OS_APP_MAN='yum'
+      OS_APP_MAN='dnf'
       DEPENDENCIES+=('sudo' 'file' 'make' 'automake' 'gcc' 'gcc-c++' 'kernel-devel' 'python3' 'python3-pip')
       [[ -n "${INSTALL_AI}" ]] &&
-        DEPENDENCIES+=('ffmpeg' 'python3-pyaudio' 'portaudio-devel' 'redhat-rpm-config' 'libmagic-dev')
-      update="yum update"
-      install="yum install -y"
-      check_pkg="yum list installed | grep"
+        DEPENDENCIES+=('ffmpeg' 'python3-pyaudio' 'portaudio-devel' 'redhat-rpm-config' 'file-devel')
+      update="dnf -y update"
+      install="dnf install -y"
+      check_pkg="rpm -qa"
     # Alpine: Busybox
     elif has 'apk'; then
       OS_TYPE='Alpine'
@@ -472,7 +472,7 @@ usage: $APP_NAME [OPTIONS] <args>
       unset INSTALL_AI # AskAI is not tested on Alpine
       update="apk update"
       install="apk add --no-cache"
-      check_pkg="apk list | grep"
+      check_pkg="apk list"
     # ArchLinux
     elif has 'pacman'; then
       OS_TYPE='ArchLinux'
@@ -481,7 +481,7 @@ usage: $APP_NAME [OPTIONS] <args>
       unset INSTALL_AI # AskAI is not tested on ArchLinux
       update="pacman -Sy"
       install="pacman -Sy"
-      check_pkg="pacman -Q | grep"
+      check_pkg="pacman -Q"
     else
       quit 1 "Unable to find package manager for $(uname -s)"
     fi
