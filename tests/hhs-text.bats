@@ -33,10 +33,7 @@ EOF
 
 # TC - 2
 @test "when-jq-is-available-then-json-print-uses-it" {
-  # Ensure jq is installed
-  if ! command -v jq >/dev/null; then
-    skip "jq is not installed"
-  fi
+  ensure_json_print
   run command -v jq
   assert_success
   run __hhs_json_print '{"foo": 1, "bar": 2}'

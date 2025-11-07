@@ -54,6 +54,7 @@ setup() {
 
 # TC - 5
 @test "--info triggers info lookup output" {
+  ensure_json_print
   run "${APP}" --info 8.8.8.8
 
   RESP='

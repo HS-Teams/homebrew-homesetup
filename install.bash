@@ -160,7 +160,7 @@ usage: $APP_NAME [OPTIONS] <args>
 
   # HomeSetup application dependencies
   DEPENDENCIES=(
-    'git' 'curl' 'ruby' 'rsync' 'mkdir' 'vim' 'gawk' 'make'
+    'git' 'curl' 'ruby' 'rsync' 'mkdir' 'vim' 'gawk' 'make' 'jq'
   )
 
   # Missing HomeSetup dependencies
@@ -517,7 +517,7 @@ usage: $APP_NAME [OPTIONS] <args>
 
     local install="${1}" update="${2}" check_pkg="${3}" tools pkgs use_sudo=
 
-    echo -en "${BLUE}[${OS_TYPE}] ${WHITE}Updating packages repositories using: ${YELLOW}\"${update}\"${NC}"
+    echo -en "\n${BLUE}[${OS_TYPE}] ${WHITE}Updating packages repositories using: ${YELLOW}\"${update}\"${NC}"
     if ! ${update} >>"${INSTALL_LOG}" 2>&1; then
       echo -e " ${RED}${FAIL_ICN} FAILED${NC}"
       # 2nd Attempt to install packages using sudo.
@@ -542,18 +542,20 @@ usage: $APP_NAME [OPTIONS] <args>
       echo -e "${BLUE}[${OS_TYPE}] ${WHITE}Installing required packages using: ${YELLOW}\"${install}\"${NC}"
       echo -e "  |-${pkgs}"
       for tool_name in "${tools[@]}"; do
-        echo -en "${BLUE}[${OS_TYPE}] ${WHITE}Installing: ${YELLOW}${tool_name}${NC}..."
+        [[ -z "${use_sudo}" ]] && echo -en "${BLUE}[${OS_TYPE}] ${WHITE}Installing: ${YELLOW}${tool_name}${NC}..."
         if [[ -z "${use_sudo}" ]] && ${install} "${tool_name}" >>"${INSTALL_LOG}" 2>&1; then
           printf '%*.*s' 0 $((pad_len - ${#tool_name})) "${pad}"
           echo -e " ${GREEN}${SUCCESS_ICN} OK${NC}"
         else
-          [[ -z "${use_sudo}" ]] && echo -e " ${RED}${FAIL_ICN} FAILED${NC}"
+          if [[ -z "${use_sudo}" ]]; then
+            echo -e " ${RED}${FAIL_ICN} FAILED${NC}"
+          fi
           # 2nd Attempt to install packages using sudo.
           has 'sudo' || quit 2 "Failed to install dependencies. 'sudo' is not available"
           [[ -z "${use_sudo}" && -n "${SUDO}" ]] && echo -e "\n${ORANGE}Retrying with 'sudo'. You may be prompted for password.${NC}\n"
           install="${SUDO} ${install}"
           use_sudo=1
-          echo -en "${BLUE}[${OS_TYPE}] ${WHITE}Installing: ${YELLOW}${tool_name}${NC}..."
+          [[ -n "${use_sudo}" ]] && echo -en "${BLUE}[${OS_TYPE}] ${WHITE}Installing: ${YELLOW}${tool_name}${NC}..."
           if ${install} "${tool_name}" >>"${INSTALL_LOG}" 2>&1; then
             printf '%*.*s' 0 $((pad_len - ${#tool_name})) "${pad}"
             echo -e " ${GREEN}${SUCCESS_ICN} OK${NC}"
@@ -871,6 +873,17 @@ usage: $APP_NAME [OPTIONS] <args>
       quit 2 "Python and Pip >= 3.10 <= 3.12 are required to use HomeSetup! Found: ${python_version}"
 
     echo -e "${GREEN}OK${NC}"
+
+    # Upgrade pip
+    echo -en "\n${python3_str}${WHITE}Updating pip: \"${PIP3}\" ... "
+    if ${PIP3} install --upgrade --break-system-packages pip >>"${INSTALL_LOG}" 2>&1
+    then
+      echo -e "${GREEN}OK${NC}"
+    else
+      echo -e "${RED}FAILED${NC}"
+      quit 2 "Unable to update pip!"
+    fi
+
     create_venv
   }
 

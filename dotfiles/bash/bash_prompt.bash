@@ -28,7 +28,7 @@ function __hhs_git_prompt() {
 
   local st_flag='' branch_name=''
 
-  if __hhs_has git && git rev-parse --is-inside-work-tree &>/dev/null; then
+  if git rev-parse --is-inside-work-tree &>/dev/null; then
 
     # check if the current directory is in .git before running git checks.
     if [[ "$(git rev-parse --is-inside-git-dir 2>/dev/null)" == 'false' ]]; then

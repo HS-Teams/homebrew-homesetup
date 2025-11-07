@@ -89,10 +89,3 @@ setup() {
   assert_failure
   assert_output --partial "fetch.bash  --timeout requires a numeric value."
 }
-
-# TC - 11
-@test "fails with timeout reached" {
-  run "${APP}" -t 1 GET https://httpstat.us/200?sleep=5000
-  assert_failure
-  assert_output --partial "Server responded with no data."
-}

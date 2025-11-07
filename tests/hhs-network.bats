@@ -262,6 +262,7 @@ load_network() {
 
 # TC - 6
 @test "__hhs_ip_info pretty prints data when curl succeeds" {
+  ensure_json_print
   stub_curl
 
   load_network

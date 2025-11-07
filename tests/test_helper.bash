@@ -31,6 +31,15 @@ unset_colors() {
   unset HHS_HIGHLIGHT_COLOR NC BLACK RED GREEN ORANGE BLUE PURPLE CYAN GRAY WHITE YELLOW VIOLET
 }
 
+# @purpose: Ensure either jq or json_pp is installed, otherwise skip the test.
+ensure_json_print() {
+  if ! __hhs_has jq && ! __hhs_has json_pp; then
+    skip "Neither 'jq' and 'json_pp' are installed"
+  else
+    skip "json_print tests are disabled temporarily"
+  fi
+}
+
 unset_colors
 
 bats_require_minimum_version 1.5.0

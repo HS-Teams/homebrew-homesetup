@@ -75,8 +75,6 @@ __hhs_json_print() {
     formatter="jq"
   elif __hhs_has "json_pp"; then
     formatter="json_pp"
-  else
-    formatter="none"
   fi
 
   # Apply formatter
@@ -84,26 +82,27 @@ __hhs_json_print() {
     case "${formatter}" in
       jq)       echo "${raw_json}" | jq ;;
       json_pp)  echo "${raw_json}" | json_pp -f json -t json -json_opt pretty,indent,escape_slash ;;
-      none)     echo -e "${BLUE}${raw_json}${NC}" ;;
+      *)        echo -e "${BLUE}${raw_json}${NC}" ;;
     esac
-
   elif [[ "${use_file}" == true ]]; then
+    # shellcheck disable=SC2119
     case "${formatter}" in
       jq)       jq < "${input}" ;;
       json_pp)  json_pp -f json -t json -json_opt pretty,indent,escape_slash < "${input}" ;;
-      none)     cat "${input}" ;;
+      *)        __hhs_highlight < "${input}" ;;
     esac
-
   elif [[ -n "${raw_json}" ]]; then
     case "${formatter}" in
       jq)       echo "${raw_json}" | jq ;;
       json_pp)  echo "${raw_json}" | json_pp -f json -t json -json_opt pretty,indent,escape_slash ;;
-      none)     echo -e "${BLUE}${raw_json}${NC}" ;;
+      *)        echo -e "${BLUE}${raw_json}${NC}" ;;
     esac
   else
     echo -e "${ORANGE}WARNING${NC}: No input provided. Use --help for usage." >&2
     return 1
   fi
+
+  return 0
 }
 
 # @function: Pretty print (format) XML/HTML string.
@@ -134,14 +133,15 @@ __hhs_xml_print() {
       xmllint --format <(echo "${input}")
     fi
   else
-    python - <<'PYCODE'
-import sys, xml.dom.minidom as d
-try:
-    print(d.parse(sys.stdin).toprettyxml())
-except Exception as e:
-    print(f"ERROR: Failed to parse input. {e}")
-PYCODE
+    # Fallback to Python if xmllint is not available
+    if [[ -f "${input}" && -s "${input}" ]]; then
+      python3 -c "import xml.dom.minidom; print(xml.dom.minidom.parse('${input}').toprettyxml())"
+    else
+      python3 -c "import sys, xml.dom.minidom; print(xml.dom.minidom.parseString(sys.stdin.read()).toprettyxml())" <<<"${input}"
+    fi
   fi
+
+  return $?
 }
 
 # @function: Convert string into it's decimal ASCII representation.

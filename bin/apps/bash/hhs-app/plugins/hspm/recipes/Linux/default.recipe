@@ -47,6 +47,10 @@ function _uninstall_() {
     if ${SUDO} "${HHS_MY_OS_PACKMAN}" del ${@}; then
       return 0
     fi
+  elif [[ ${HHS_MY_OS_PACKMAN} == 'dnf' ]]; then
+    if ${SUDO} "${HHS_MY_OS_PACKMAN}" remove ${@}; then
+      return 0
+    fi
   else
     if ${SUDO} "${HHS_MY_OS_PACKMAN}" uninstall ${@}; then
       return 0

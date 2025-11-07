@@ -121,11 +121,18 @@ function __hhs_ip_info() {
     echo "usage: ${FUNCNAME[0]} <IPv4_address>"
     return 1
   else
-    ipinfo=$(curl -s --fail -m 3 "${ip_srv_url}" 2>/dev/null)
-    [[ -n "$ipinfo" ]] && {
-      __hhs_json_print "$ipinfo"
+    ipinfo="$(curl -s --fail -m 3 "${ip_srv_url}" 2>/dev/null)"
+    status=$?
+    if [[ $status -ne 0 ]]; then
+      __hhs_errcho "${APP_NAME}" "Request to ${ip_srv_url} failed (exit=$status)."
+    else
+      if [[ -n "${ipinfo}" ]]; then
+        __hhs_json_print "${ipinfo}"
+      else
+        echo "${ORANGE}No information found for IP ${1}.${NC}"
+      fi
       return 0
-    }
+    fi
   fi
 
   return 1
