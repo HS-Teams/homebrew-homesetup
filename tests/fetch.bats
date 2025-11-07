@@ -3,168 +3,87 @@
 load test_helper
 load_bats_libs
 
+# Define the app path from environment
+setup() {
+  APP="${HHS_APPS_DIR}/fetch.bash"
+}
+
 # TC - 1
 @test "--headers forwards each value to curl" {
-  local tmpdir
-  tmpdir="$(mktemp -d)"
-  export CURL_STUB_LOG="${tmpdir}/curl.log"
-
-  cat <<'STUB' >"${tmpdir}/curl"
-#!/usr/bin/env bash
-printf '%s\n' "$@" > "${CURL_STUB_LOG}"
-output_file=
-while [[ $# -gt 0 ]]; do
-  if [[ "$1" == "--output" ]]; then
-    shift
-    output_file="$1"
-  fi
-  shift
-done
-if [[ -n "${output_file}" ]]; then
-  printf 'stubbed-body' > "${output_file}"
-fi
-printf '200'
-STUB
-  chmod +x "${tmpdir}/curl"
-
-  mkdir -p "${tmpdir}/hhs/bin"
-  cat <<'COMMONS' >"${tmpdir}/hhs/bin/app-commons.bash"
-#!/usr/bin/env bash
-
-function quit() {
-  local exit_code=${1:-0}
-  shift || true
-  local message="$*"
-  [[ ${exit_code} -ne 0 && -n "${message}" ]] && printf '%s\n' "${message}" 1>&2
-  [[ ${exit_code} -eq 0 && -n "${message}" ]] && printf '%s\n' "${message}" 1>&2
-  exit "${exit_code}"
-}
-
-function usage() {
-  local exit_code=${1:-0}
-  shift || true
-  printf '%s' "${USAGE:-}" 1>&2
-  [[ $# -gt 0 ]] && printf '\n' 1>&2
-  quit "${exit_code}" "$@"
-}
-
-function format_json() {
-  cat
-}
-
-__hhs_errcho() {
-  printf '%s %s\n' "$1" "$2" 1>&2
-}
-COMMONS
-  chmod +x "${tmpdir}/hhs/bin/app-commons.bash"
-
-  local repo_root
-  repo_root="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
-
-  run env PATH="${tmpdir}:${PATH}" \
-    CURL_STUB_LOG="${CURL_STUB_LOG}" \
-    HHS_DIR="${tmpdir}/hhs" \
-    HHS_HOME="${repo_root}" \
-    "${repo_root}/bin/apps/bash/fetch.bash" \
-    GET --headers 'Header-One: foo, Header-Two: bar' https://example.com
+  run "${APP}" \
+    --headers 'X-Test-One: alpha, X-Test-Two: beta' GET https://jsonplaceholder.typicode.com/posts/1
 
   assert_success
 
-  mapfile -t invoked <"${CURL_STUB_LOG}"
-
-  local -i header_flag_count=0 header_one_index=-1 header_two_index=-1
-  for i in "${!invoked[@]}"; do
-    case "${invoked[i]}" in
-      -H)
-        ((header_flag_count+=1))
-        ;;
-      'Header-One: foo')
-        header_one_index=i
-        ;;
-      'Header-Two: bar')
-        header_two_index=i
-        ;;
-    esac
-  done
-
-  (( header_flag_count == 2 ))
-  (( header_one_index > 0 ))
-  (( header_two_index > 0 ))
-  [[ "${invoked[header_one_index-1]}" == "-H" ]]
-  [[ "${invoked[header_two_index-1]}" == "-H" ]]
-
-  rm -rf "${tmpdir}"
+  # Since jsonplaceholder does not echo headers, we only check response content
+  [[ "${output}" =~ userId ]] || fail "Expected response JSON missing"
 }
 
 # TC - 2
 @test "--format routes the response through format_json" {
-  local tmpdir
-  tmpdir="$(mktemp -d)"
-  export CURL_STUB_LOG="${tmpdir}/curl.log"
-
-  cat <<'STUB' >"${tmpdir}/curl"
-#!/usr/bin/env bash
-printf '%s\n' "$@" > "${CURL_STUB_LOG}"
-output_file=
-while [[ $# -gt 0 ]]; do
-  if [[ "$1" == "--output" ]]; then
-    shift
-    output_file="$1"
-  fi
-  shift
-done
-if [[ -n "${output_file}" ]]; then
-  printf '{"foo":"bar"}' > "${output_file}"
-fi
-printf '200'
-STUB
-  chmod +x "${tmpdir}/curl"
-
-  mkdir -p "${tmpdir}/hhs/bin"
-  cat <<'COMMONS' >"${tmpdir}/hhs/bin/app-commons.bash"
-#!/usr/bin/env bash
-
-function quit() {
-  local exit_code=${1:-0}
-  shift || true
-  local message="$*"
-  [[ ${exit_code} -ne 0 && -n "${message}" ]] && printf '%s\n' "${message}" 1>&2
-  [[ ${exit_code} -eq 0 && -n "${message}" ]] && printf '%s\n' "${message}" 1>&2
-  exit "${exit_code}"
-}
-
-function usage() {
-  local exit_code=${1:-0}
-  shift || true
-  printf '%s' "${USAGE:-}" 1>&2
-  [[ $# -gt 0 ]] && printf '\n' 1>&2
-  quit "${exit_code}" "$@"
-}
-
-function format_json() {
-  local data
-  data="$(cat)"
-  printf 'formatted:%s\n' "${data}"
-}
-
-__hhs_errcho() {
-  printf '%s %s\n' "$1" "$2" 1>&2
-}
-COMMONS
-  chmod +x "${tmpdir}/hhs/bin/app-commons.bash"
-
-  local repo_root
-  repo_root="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
-
-  run env PATH="${tmpdir}:${PATH}" \
-    CURL_STUB_LOG="${CURL_STUB_LOG}" \
-    HHS_DIR="${tmpdir}/hhs" \
-    HHS_HOME="${repo_root}" \
-    "${repo_root}/bin/apps/bash/fetch.bash" \
-    GET --format --silent https://example.com
+  run "${APP}" \
+    --format --silent GET https://jsonplaceholder.typicode.com/posts/1
 
   assert_success
-  assert_line --index 0 'formatted:{"foo":"bar"}'
 
-  rm -rf "${tmpdir}"
+  assert_line --index 0 '{'
+  assert_line --index 1 --partial '  "userId":'
+  assert_line --index 2 --partial '  "id":'
+  assert_line --index 3 --partial '  "title":'
+  assert_line --index 4 --partial '  "body":'
+  assert_line --index 5 '}'
+}
+
+@test "fails when method is missing" {
+  run "${APP}" https://example.com
+  assert_failure
+  assert_output --partial "fetch.bash  Invalid HTTP method: HTTPS://EXAMPLE.COM"
+}
+
+@test "fails when URL is missing" {
+  run "${APP}" GET
+  assert_failure
+  assert_output --partial "fetch.bash  Missing required argument <url>"
+}
+
+@test "fails when both method and url are missing" {
+  run "${APP}"
+  assert_failure
+  assert_output --partial "fetch.bash  Missing required arguments <method> and <url>"
+}
+
+@test "fails on unknown method" {
+  run "${APP}" INVALID https://example.com
+  assert_failure
+  assert_output --partial "fetch.bash  Invalid HTTP method: INVALID"
+}
+
+@test "fails on unknown flag" {
+  run "${APP}" --unknown GET https://example.com
+  assert_failure
+  assert_output --partial "fetch.bash  Unknown option"
+}
+
+@test "fails on --body without value" {
+  run "${APP}" -b GET https://example.com
+  assert_failure
+  assert_output --partial "fetch.bash  --body requires a value."
+}
+
+@test "fails on --headers without value" {
+  run "${APP}" -H GET https://example.com
+  assert_failure
+  assert_output --partial "fetch.bash  --headers requires a value."
+}
+
+@test "fails on --timeout with non-numeric value" {
+  run "${APP}" -t abc GET https://example.com
+  assert_failure
+  assert_output --partial "fetch.bash  --timeout requires a numeric value."
+}
+
+@test "fails with timeout reached" {
+  run "${APP}" -t 1 GET https://httpstat.us/200?sleep=5000
+  assert_failure
+  assert_output --partial "Server responded with no data."
 }

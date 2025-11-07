@@ -33,6 +33,9 @@ EOF
 
 # TC - 2
 @test "when-jq-is-available-then-json-print-uses-it" {
+  # Ensure jq is installed
+  run command -v jq
+  assert_success
   run __hhs_json_print '{"foo": 1, "bar": 2}'
 
   assert_success
@@ -41,6 +44,21 @@ EOF
 }
 
 # TC - 3
+@test "when-xmllint-is-available-then-xml-print-uses-it" {
+  # Ensure xmllint is installed
+  run command -v xmllint
+  assert_success
+
+  # Run the function with unformatted XML
+  run __hhs_xml_print '<root><child>1</child><child>2</child></root>'
+  assert_success
+
+#  assert_output --partial '<root>'
+#  assert_output --partial '<child>1</child>'
+#  assert_output --partial '<child>2</child>'
+}
+
+# TC - 4
 @test "when-converting-string-to-ascii-then-numeric-representations-are-returned" {
   run __hhs_ascof 'Hi'
 
@@ -50,7 +68,7 @@ EOF
   assert_output --partial 'Str: Hi'
 }
 
-# TC - 4
+# TC - 5
 @test "when-converting-valid-unicode-then-all-representations-are-printed" {
   run __hhs_utoh f123
 

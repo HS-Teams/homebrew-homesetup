@@ -4,21 +4,21 @@
 #  Script: fetch.bash
 # Purpose: Fetch URL resource using the most commons ways.
 # Created: Oct 24, 2018
-#  Author: <B>H</B>ugo <B>S</B>aporetti <B>J</B>unior
+#  Author: Taius
 #  Mailto: taius.hhs@gmail.com
 #    Site: https://github.com/yorevs/homesetup
 # License: Please refer to <https://opensource.org/licenses/MIT>
 #
 # Copyright (c) 2025, HomeSetup team
 
-# Current script version.
-VERSION=1.0.0
+# https://semver.org/; major.minor.patch
+VERSION="1.1.0"
 
 # Application name.
 APP_NAME="$(basename "$0")"
 
 # Help message to be displayed by the application.
-USAGE="usage: ${APP_NAME} <method> [options] <url>
+USAGE="usage: ${APP_NAME} [options] <method> <url>
 
   Fetch URL resource using the most commons ways.
 
@@ -28,37 +28,27 @@ USAGE="usage: ${APP_NAME} <method> [options] <url>
         url                         : The url to make the request.
 
     Options:
-        --headers <header_list>     : Comma-separated http request headers.
-        --body    <json_body>       : The http request body (payload).
-        --format                    : Pretty-print the JSON response when possible.
-        --silent                    : Omits all informational messages.
+        -b, --body <json_body>      : The http request body (payload).
+        -f, --format                : Pretty-print the JSON response when possible.
+        -H, --headers <headers>     : Comma-separated http request headers.
+        -s, --silent                : Omits all informational messages.
+        -t, --timeout <seconds>     : Request timeout (default: 3).
+        -h, --help                  : Display help message and quit.
+        -v, --version               : Print version information and quit.
+
+  Examples:
+    ${APP_NAME} -s -f GET https://example.com
+    ${APP_NAME} --headers \"Accept: application/json\" POST --body '{\"x\":1}' https://api.site.com
+
 "
 
 # Functions to be unset after quit.
 UNSETS=(
-  format_json trim_whitespace fetch_with_curl parse_args do_fetch main
+  parse_args trim_whitespace fetch_with_curl do_fetch main
 )
 
-# Common application functions.
+# Common application functions
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
-
-if ! declare -f format_json >/dev/null; then
-  # @purpose: Pretty-print JSON payloads when formatting is requested.
-  function format_json() {
-    local input
-    input="$(cat)"
-
-    if command -v jq >/dev/null 2>&1; then
-      printf '%s' "${input}" | jq . 2>/dev/null || printf '%s\n' "${input}"
-    elif command -v python3 >/dev/null 2>&1; then
-      printf '%s' "${input}" | python3 -m json.tool 2>/dev/null || printf '%s\n' "${input}"
-    elif command -v python >/dev/null 2>&1; then
-      printf '%s' "${input}" | python -m json.tool 2>/dev/null || printf '%s\n' "${input}"
-    else
-      printf '%s\n' "${input}"
-    fi
-  }
-fi
 
 # Request timeout in seconds.
 REQ_TIMEOUT=3
@@ -87,129 +77,159 @@ RESPONSE=
 # Http status code.
 STATUS=0
 
+# HTTP Method.
+METHOD=
+
+# Site URL.
+URL=
+
 # @purpose: Trim leading and trailing whitespace.
+# @param $1 [Req]: String to trim
 trim_whitespace() {
   local trimmed
   trimmed="$(printf '%s' "${1}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
   printf '%s' "${trimmed}"
 }
 
-# @purpose: Do the request according to the method
-fetch_with_curl() {
+# @purpose: Ensure that a required argument is provided
+# @param $1 [Req]: Argument value
+require_arg() {
+  if [[ -z "${1}" || "${1}" == -* ]]; then
+    __hhs_errcho "${APP_NAME}" "Missing required argument." >&2
+    quit 1
+  fi
+  printf '%s' "${1}"
+}
 
-  aux=$(mktemp)
+# @purpose: Validate the HTTP method
+# @param $1 [Req]: The HTTP method
+validate_method() {
+  local method="${1^^}"  # uppercase
+  [[ -z "${METHOD}" ]] && \
+    __hhs_errcho "${APP_NAME}" "Missing required argument <method>" && quit 1
+  case "${method}" in
+    GET|HEAD|POST|PUT|PATCH|DELETE) return 0 ;;
+    *)
+      __hhs_errcho "${APP_NAME}" "Invalid HTTP method: ${method}"
+      quit 1
+      ;;
+  esac
+}
+
+# @purpose: Validate the URL format
+# @param $1 [Req]: The URL
+validate_url() {
+  local url="${1}"
+    # Validate required args
+  [[ ${#args[@]} -lt 2 ]] && \
+    __hhs_errcho "${APP_NAME}" "Missing required argument <url>." && quit 1
+  if [[ "${url}" =~ ^https?:// ]]; then
+    return 0
+  else
+    __hhs_errcho "${APP_NAME}" "Invalid URL: %s" "${url}"
+    quit 1
+  fi
+}
+
+# @purpose: Parse CLI arguments (short and long options supported)
+# @param $@ [Req]: All arguments passed to script
+parse_args() {
+  local args
+
+  declare -a args=()
+
+  while [[ $# -gt 0 ]]; do
+    arg="$1"; shift
+
+    case "${arg}" in
+      -b|--body)
+        [[ -z "$1" || "$1" == -* || "$1" =~ ^(GET|POST|PUT|PATCH|DELETE|HEAD)$ ]] && \
+          __hhs_errcho "${APP_NAME}" "--body requires a value." && quit 1
+        BODY="$1"
+        shift
+        ;;
+      -H|--headers)
+        [[ -z "$1" || "$1" == -* || "$1" =~ ^(GET|POST|PUT|PATCH|DELETE|HEAD)$ ]] && \
+          __hhs_errcho "${APP_NAME}" "--headers requires a value." && quit 1
+        HEADERS="$1"
+        shift
+        ;;
+      -t|--timeout)
+        [[ -z "$1" || "$1" =~ ^[0-9]+$ ]] || {
+          __hhs_errcho "${APP_NAME}" "--timeout requires a numeric value."
+          quit 1
+        }
+        REQ_TIMEOUT="$1"
+        shift
+        ;;
+      -f|--format) FORMAT=true ;;
+      -s|--silent) SILENT=true ;;
+      -h|--help) usage 0 ;;
+      -v|--version) version ; quit 0 ;;
+      -*) __hhs_errcho "${APP_NAME}" "Unknown option: '${1}'" && usage 1 ;;
+      *) args+=("${arg}") ;;
+    esac
+  done
+
+  [[ ${#args[@]} -eq 0 ]] && \
+    __hhs_errcho "${APP_NAME}" "Missing required arguments <method> and <url>" && usage 1
+
+  # Positional arguments
+  METHOD="$(trim_whitespace "${args[0]}")"
+  URL="$(trim_whitespace "${args[1]}")"
+
+  validate_method "${METHOD}"
+  validate_url "${URL}"
+}
+
+# @purpose: Run curl request using constructed args
+# @purpose: Run curl request using constructed args, no tempfile
+fetch_with_curl() {
+  local status http_status curl_opts response ret_val=1
 
   curl_opts=(
-    '-s' '--fail' '-L' '--output' "${aux}" '-m' "${REQ_TIMEOUT}" '--write-out' "%{http_code}"
+    '--silent' '--fail' '--location'
+    '--max-time' "${REQ_TIMEOUT}"
+    '--write-out' '%{http_code}'
   )
 
   local -a curl_cmd=("curl" "${curl_opts[@]}" '-X' "${METHOD}")
 
-  if [[ -n "${BODY}" ]]; then
-    curl_cmd+=('-d' "${BODY}")
-  fi
-
-  if [[ ${#HEADER_ARGS[@]} -gt 0 ]]; then
-    curl_cmd+=("${HEADER_ARGS[@]}")
-  fi
-
+  [[ -n "${BODY}" ]] && curl_cmd+=('-d' "${BODY}")
+  [[ ${#HEADER_ARGS[@]} -gt 0 ]] && curl_cmd+=("${HEADER_ARGS[@]}")
   curl_cmd+=("${URL}")
 
-  STATUS=$("${curl_cmd[@]}")
+  # Run curl and capture both response and status code in one go
+  response="$("${curl_cmd[@]}" 2>/dev/null)"
+  status=$?
+  http_status="${response: -3}"              # last 3 characters = HTTP status
+  RESPONSE="${response:: -3}"                # all but last 3 = body
+  STATUS="${http_status}"
 
-  if [[ -s "${aux}" ]]; then
-    RESPONSE=$(grep . --color=none "${aux}")
-    \rm -f "${aux}"
-  fi
-
-  if [[ ${STATUS} -ge 200 && ${STATUS} -lt 400 ]]; then
-    RET_VAL=0
-  else
-    RET_VAL=1
-  fi
-
-  return $RET_VAL
-}
-
-# ------------------------------------------
-# Basics
-
-# @purpose: Parse command line arguments
-parse_args() {
-
-  [[ $# -lt 2 ]] && usage 1
-
-  shopt -s nocasematch
-  case "${1}" in
-    'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE')
-      METHOD="$(tr '[:lower:]' '[:upper:]' <<< "${1}")"
-      shift
-      ;;
-    *)
-      __hhs_errcho "${APP_NAME}" "Method \"${1}\" is not not valid!"
-      quit 2
-      ;;
+  case "${status}" in
+    28) __hhs_errcho "${APP_NAME}" "Request timed out after ${REQ_TIMEOUT}s." && quit 2 ;;
+    52) __hhs_errcho "${APP_NAME}" "Server responded with no data." && quit 2 ;;
+    0)  [[ ${STATUS} -ge 200 && ${STATUS} -lt 400 ]] && ret_val=0;;
+    *)  ret_val=1 ;;
   esac
-  shopt -u nocasematch
 
-  # Loop through the command line options.
-  while test -n "$1"; do
-    case "$1" in
-      --headers)
-        shift
-        HEADER_ARGS=()
-        HEADERS=""
-        if [[ -n "${1}" ]]; then
-          IFS=',' read -ra header_values <<< "${1}"
-          for next in "${header_values[@]}"; do
-            header_trimmed="$(trim_whitespace "${next}")"
-            if [[ -n "${header_trimmed}" ]]; then
-              HEADER_ARGS+=('-H' "${header_trimmed}")
-              HEADERS+=" -H ${header_trimmed}"
-            fi
-          done
-        fi
-        ;;
-      --body)
-        shift
-        BODY="$1"
-        ;;
-      --format)
-        FORMAT=1
-        ;;
-      --silent)
-        SILENT=1
-        ;;
-      *)
-        URL="$*"
-        break
-        ;;
-    esac
-    shift
-  done
-}
-
-# @purpose: Fetch the url using the most common ways.
-do_fetch() {
-  fetch_with_curl
-  return $?
+  return $ret_val
 }
 
 # @purpose: Program entry point
 main() {
-
-  parse_args "${@}"
+  parse_args "$@"
 
   case "${METHOD}" in
-    'GET' | 'HEAD' | 'DELETE')
+    GET|HEAD|DELETE)
       [[ -n "${BODY}" ]] && {
-        __hhs_errcho "${APP_NAME}" "${METHOD} does not accept a body"
+        __hhs_errcho "${APP_NAME}" "${METHOD} does not accept a request body" >&2
         quit 1
       }
       ;;
-    'PUT' | 'POST' | 'PATCH')
+    POST|PUT|PATCH)
       [[ -z "${BODY}" ]] && {
-        __hhs_errcho "${APP_NAME}" "${METHOD} requires a body"
+        __hhs_errcho "${APP_NAME}"  "${METHOD} requires a body (--body)" >&2
         quit 1
       }
       ;;
@@ -217,23 +237,22 @@ main() {
 
   [[ -z "${SILENT}" ]] && echo -e "Fetching: ${METHOD} ${HEADERS} ${URL} ..."
 
-  if do_fetch; then
+  if fetch_with_curl; then
     if [[ -n "${FORMAT}" ]]; then
-      printf '%s' "${RESPONSE}" | format_json
+      command -v jq >/dev/null && printf '%s' "${RESPONSE}" | __hhs_json_print '.' || echo "${RESPONSE}"
     else
-      echo "${RESPONSE}"
+      [[ -n "${RESPONSE}" ]] && echo "${RESPONSE}"
     fi
     quit 0
   else
     if [[ -z "${SILENT}" ]]; then
-      msg="Failed to process request: (Status=${STATUS})"
-      __hhs_errcho "${APP_NAME}" "${msg} => [resp:${RESPONSE:-<empty>}]"
+      quit 1 "1 Failed to process request: (Status=${STATUS}) => [resp:${RESPONSE:-<empty>}]"
     else
       echo "${RET_VAL}" 1>&2
-      quit 0
     fi
+    quit 1 "${APP_NAME} 2 Failed to execute the \"${METHOD}\" request to \"${URL}\"."
   fi
 }
 
-main "${@}"
-quit 1
+main "$@"
+quit 1 "${APP_NAME} 3 Failed to execute the \"${METHOD}\" request to \"${URL}\"."

@@ -35,26 +35,113 @@ function __hhs_highlight() {
   return 0
 }
 
-# @function: Pretty print (format) JSON string.
-# @param $1 [Req] : The unformatted JSON string.
-function __hhs_json_print() {
-
-  local json="${1}"
-
-  if [[ $# -le 0 || "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "usage: ${FUNCNAME[0]} <json_string>"
+# @function: Pretty print (format) JSON from file, string, or piped input.
+# @param $1 [Opt]: JSON string or path to JSON file.
+__hhs_json_print() {
+  # Show help if no args or if help is requested and stdin is not piped
+  if [[ "$1" == "-h" || "$1" == "--help" || ( $# -eq 0 && -t 0 ) ]]; then
+    echo "Usage: ${FUNCNAME[0]} [JSON_STRING_OR_FILE]"
+    echo
+    echo "Formats and pretty-prints JSON using jq or json_pp."
+    echo
+    echo "Accepted input formats:"
+    echo "  1. Direct string  => __hhs_json_print '{\"a\":1}'"
+    echo "  2. File path      => __hhs_json_print ./data.json"
+    echo "  3. Piped input    => echo '{\"a\":1}' | __hhs_json_print"
+    echo
+    echo "Options:"
+    echo "  -h, --help        Show this help message"
     return 1
-  else
-    if __hhs_has jq; then
-      echo "${json}" | jq
-    elif __hhs_has json_pp; then
-      echo "${json}" | json_pp -f json -t json -json_opt pretty indent escape_slash
-    else
-      echo "${BLUE}${json}${NC}"
-    fi
   fi
 
-  return $?
+  local input="${1:-}"
+  local from_stdin=false
+  local use_file=false
+  local formatter=""
+  local raw_json=""
+
+  # Detect piped input
+  if [[ ! -t 0 ]]; then
+    from_stdin=true
+    raw_json="$(cat -)"
+  elif [[ -n "${input}" && -f "${input}" && -s "${input}" ]]; then
+    use_file=true
+  else
+    raw_json="${input}"
+  fi
+
+  # Choose available JSON formatter
+  if __hhs_has "jq"; then
+    formatter="jq"
+  elif __hhs_has "json_pp"; then
+    formatter="json_pp"
+  else
+    formatter="none"
+  fi
+
+  # Apply formatter
+  if [[ "${from_stdin}" == true ]]; then
+    case "${formatter}" in
+      jq)       echo "${raw_json}" | jq ;;
+      json_pp)  echo "${raw_json}" | json_pp -f json -t json -json_opt pretty,indent,escape_slash ;;
+      none)     echo -e "${BLUE}${raw_json}${NC}" ;;
+    esac
+
+  elif [[ "${use_file}" == true ]]; then
+    case "${formatter}" in
+      jq)       jq < "${input}" ;;
+      json_pp)  json_pp -f json -t json -json_opt pretty,indent,escape_slash < "${input}" ;;
+      none)     cat "${input}" ;;
+    esac
+
+  elif [[ -n "${raw_json}" ]]; then
+    case "${formatter}" in
+      jq)       echo "${raw_json}" | jq ;;
+      json_pp)  echo "${raw_json}" | json_pp -f json -t json -json_opt pretty,indent,escape_slash ;;
+      none)     echo -e "${BLUE}${raw_json}${NC}" ;;
+    esac
+  else
+    echo -e "${ORANGE}WARNING${NC}: No input provided. Use --help for usage." >&2
+    return 1
+  fi
+}
+
+# @function: Pretty print (format) XML/HTML string.
+# @param $1 [Opt]: XML string or path to XML file.
+__hhs_xml_print() {
+  local input="$1"
+
+  # Show help if no args or if help is requested and stdin is not piped
+  if [[ "$1" == "-h" || "$1" == "--help" || ( $# -eq 0 && -t 0 ) ]]; then
+    echo "Usage: ${FUNCNAME[0]} [XML_OR_HTML_FILE]"
+    echo
+    echo "Formats and pretty-prints XML or HTML using xmllint (preferred) or Python fallback."
+    echo
+    echo "Accepted input formats:"
+    echo "  1. Direct string  => echo '<root><a>1</a></root>' | ${FUNCNAME[0]}"
+    echo "  2. File path      => ${FUNCNAME[0]} ./data.xml"
+    echo "  3. Piped input    => cat ./data.xml | ${FUNCNAME[0]}"
+    echo
+    echo "Options:"
+    echo "  -h, --help        Show this help message"
+    return 1
+  fi
+
+  if __hhs_has "xmllint"; then
+    if [[ -f "${input}" && -s "${input}" ]]; then
+      xmllint --format "${input}"
+    else
+      xmllint --format <(echo "${input}")
+    fi
+  else
+    python - <<'PYCODE'
+import sys, xml.dom.minidom as d
+try:
+    print(d.parse(sys.stdin).toprettyxml())
+except Exception as e:
+    print(f"ERROR: Failed to parse input. {e}")
+PYCODE
+  fi
 }
 
 # @function: Convert string into it's decimal ASCII representation.

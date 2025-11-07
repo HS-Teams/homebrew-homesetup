@@ -12,6 +12,7 @@
 
 export DOTFILES_DIR="${HHS_HOME}/dotfiles"
 export HHS_FUNCTIONS_DIR="${HHS_HOME}/bin/hhs-functions/bash"
+export HHS_APPS_DIR="${HHS_HOME}/bin/apps/bash"
 export BATS_DIR="${HHS_HOME}/tests/bats"
 
 export BATS_SUPPORT="${BATS_DIR}/bats-support/load"
