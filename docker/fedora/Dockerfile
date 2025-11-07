@@ -1,24 +1,32 @@
-FROM fedora
+FROM fedora:latest
 
-LABEL maintainer="Hugo Saporetti Junior<taius.hhs@gmail.com>"
+LABEL maintainer="Hugo Saporetti Junior <taius.hhs@gmail.com>"
 
 USER root
 
-ENV SHELL='/bin/bash'
-ENV HOME='/root'
+ENV SHELL=/bin/bash
+ENV HOME=/root
 
-RUN yum -y update
-RUN yum install -y sudo redhat-rpm-config curl vim git findutils procps procps-ng hostname uptimed glibc-common
-RUN yum install -y gcc postgresql-devel rsync file cmake ruby ruby-devel xclip net-tools
-RUN yum install -y bat fd-find fzf gawk
-RUN yum install -y python3.11 python3.11-devel portaudio-devel ffmpeg
-RUN yum clean all
+# Update and install base system
+RUN dnf -y upgrade && \
+    dnf -y install \
+        sudo redhat-rpm-config curl vim git findutils procps-ng hostname uptimed glibc-langpack-en \
+        gcc postgresql-devel rsync file cmake ruby ruby-devel xclip net-tools \
+        bat fd-find fzf gawk \
+        python3.11 python3.11-devel portaudio-devel ffmpeg && \
+    dnf clean all
+
+# Ruby gem install
 RUN gem install colorls
-RUN curl -O https://bootstrap.pypa.io/get-pip.py
-RUN $(which python3.11) get-pip.py
 
-WORKDIR "${HOME}"
+# Pip installer
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.11 get-pip.py && \
+    rm -f get-pip.py
 
-RUN curl -o- https://raw.githubusercontent.com/yorevs/homesetup/master/install.bash | bash
+WORKDIR /root
+
+# HomeSetup installation
+RUN curl -fsSL https://raw.githubusercontent.com/yorevs/homesetup/master/install.bash | bash
 
 CMD ["bash", "--login"]

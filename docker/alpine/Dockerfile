@@ -1,41 +1,29 @@
-FROM python:3.11-alpine
+FROM alpine:latest
 
-LABEL maintainer="Hugo Saporetti Junior<taius.hhs@gmail.com>"
+LABEL maintainer="Hugo Saporetti Junior <taius.hhs@gmail.com>"
 
 USER root
 
-ENV SHELL='/bin/bash'
-ENV HOME='/root'
-ENV PYTHONUNBUFFERED=1
+ENV SHELL=/bin/sh
+ENV HOME=/root
 
-# Enable edge repositories and install python3.11
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-RUN apk update && apk upgrade
+# Use stable repos only (edge repos commented out)
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.alpinelinux.org/g' /etc/apk/repositories && \
+    apk update && apk upgrade
 
-RUN ln -sf "$(command -v python3.11)" "$(dirname $(command -v python3))/python3"
+# Core system and build deps
+RUN apk add --no-cache \
+      bash sudo curl vim wget git cmake build-base \
+      libffi-dev openssl-dev bzip2-dev sqlite-dev \
+      alsa-lib-dev ffmpeg-dev portaudio-dev \
+      linux-headers
 
-RUN apk add --no-cache git
-RUN apk add --no-cache build-base
-RUN apk add --no-cache curl
-RUN apk add --no-cache rsync
-RUN apk add --no-cache ncurses
-RUN apk add --no-cache ruby
-RUN apk add --no-cache file
-RUN apk add --no-cache gnupg
-RUN apk add --no-cache bash
-RUN apk add --no-cache vim
-RUN apk add --no-cache fd
-RUN apk add --no-cache bat
-RUN apk add --no-cache fzf
-RUN apk add --no-cache ruby-dev
-RUN $(command -v python3.11) -m pip install --no-cache --upgrade --break-system-packages setuptools
-RUN apk -U upgrade
-RUN gem update --system
-RUN gem install rdoc colorls
+# Python 3.11 and tools
+RUN apk add --no-cache python3=3.11.9-r0 py3-pip
 
-WORKDIR "${HOME}"
+# Make python3 alias consistent
+RUN ln -sf "$(command -v python3)" /usr/local/bin/python && \
+    python -m ensurepip && \
+    pip install --upgrade pip setuptools wheel
 
-RUN curl -o- https://raw.githubusercontent.com/yorevs/homesetup/master/install.bash | bash
-
-CMD ["bash", "--login"]
+WORKDIR /root
