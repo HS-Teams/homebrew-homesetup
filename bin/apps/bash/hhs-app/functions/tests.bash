@@ -17,6 +17,7 @@ function tests() {
 
   local started finished log_file badge fail=0 pass=0 skip=0 status num details re_status re_len len re_skip
   local diff_time diff_time_sec diff_time_ms all_tests=("${@}") range_str old_next re_len re_skip re_status
+  local total expected_total
 
   command -v bats &> /dev/null || quit 1 "'Bats' application not available on your PATH !"
 
@@ -49,6 +50,7 @@ function tests() {
   [[ ${#all_tests[@]} -eq 0 ]] && quit 1 "There are no tests to execute!"
 
   for next in $(printf '%s\n' "${all_tests[@]}" | sort); do
+    expected_total=0
     [[ -s "${next}" ]] || {
       echo -en "\n${YELLOW}[${next##*/}]${NC} WARN: Was not found on current dir. Retrying from HomeSetup/tests ..."
       old_next="${next}"
@@ -81,6 +83,7 @@ function tests() {
         range_str="${YELLOW}${BASH_REMATCH[1]}..${BASH_REMATCH[2]}${NC}"
         echo -e "\n${CYAN}[${next##*/}] ${WHITE}Running tests [${range_str}]${NC}\n"
         len="${#BASH_REMATCH[2]}"
+        expected_total=${BASH_REMATCH[2]}
         continue
       else
         echo -e "${result}" >> "${log_file}" 2>&1
@@ -89,6 +92,10 @@ function tests() {
       echo -en "${status} "
       printf "${BLUE}TC-%${len}d${NC} %s\n" "${num}" "${details}"
     done < <(bats -rtT --print-output-on-failure "${next}" 2>&1)
+    [[ $num -ne $expected_total ]] && {
+      echo -en "\n${RED}[${next##*/}] ${WHITE}ERROR: \"${next}\" tests ($total) expected ($expected_total)!${NC}\n"
+      ((fail += 1))
+    }
   done
 
   finished="$(python3 -c 'import time; print(int(time.time() * 1000))')"
@@ -105,7 +112,7 @@ function tests() {
     echo -e "| -=- The following failures were reported -=- |"
     echo -e "+----------------------------------------------+"
     echo -e "${NC}"
-    cat "${log_file}" | nl | awk '{printf "\033[33;1m%4d\033[m  %s\n", $1, substr($0, index($0,$2))}'
+    awk '{printf "\033[33;1m%4d\033[m  %s\n", NR, $0}' "${log_file}"
     echo ''
     curl 'https://badgen.net/badge/tests/failed/red' --output "${badge}" 2> /dev/null
     echo -e " ${RED}${FAIL_ICN}${WHITE}  Bats tests ${RED}FAILED${WHITE} in ${diff_time_sec}s ${diff_time_ms}ms ${NC}"

@@ -50,8 +50,8 @@ UNSETS=(
 # Common application functions
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 
-# Request timeout in seconds.
-REQ_TIMEOUT=3
+# Request timeout in seconds (default is 10).
+REQ_TIMEOUT=10
 
 # Execution return code.
 RET_VAL=0

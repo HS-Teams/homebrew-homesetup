@@ -186,6 +186,7 @@ load_network() {
   source "${HHS_FUNCTIONS_DIR}/hhs-network.bash"
 }
 
+# TC - 1
 @test "__hhs_active_ifaces displays a formatted interface list" {
   stub_ifconfig
 
@@ -200,6 +201,7 @@ load_network() {
   assert_output --partial 'tun0'
 }
 
+# TC - 2
 @test "__hhs_active_ifaces -flat returns space separated interface names" {
   stub_ifconfig
 
@@ -213,6 +215,7 @@ load_network() {
   assert_output --partial 'tun0'
 }
 
+# TC - 3
 @test "__hhs_ip reports gateway, local, and vpn addresses" {
   stub_ifconfig
   stub_route
@@ -228,6 +231,7 @@ load_network() {
   assert_output --partial 'tun0'
 }
 
+# TC - 4
 @test "__hhs_ip vpn restricts output to vpn interfaces" {
   stub_ifconfig
   stub_route
@@ -242,6 +246,7 @@ load_network() {
   run ! assert_output --partial 'en0'
 }
 
+# TC - 5
 @test "__hhs_port_check filters results based on the provided criteria" {
   stub_netstat
 
@@ -255,6 +260,7 @@ load_network() {
   assert_output --partial 'LISTEN'
 }
 
+# TC - 6
 @test "__hhs_ip_info pretty prints data when curl succeeds" {
   stub_curl
 
@@ -267,6 +273,7 @@ load_network() {
   assert_output --partial '"city": "Sydney"'
 }
 
+# TC - 7
 @test "__hhs_ip_lookup forwards to host when available" {
   stub_ifconfig
   stub_host
@@ -279,6 +286,7 @@ load_network() {
   assert_output 'example.com has address 93.184.216.34'
 }
 
+# TC - 8
 @test "__hhs_ip_lookup is not defined when host command is missing" {
   stub_ifconfig
   HHS_MISSING_CMDS="host"
@@ -290,6 +298,7 @@ load_network() {
   assert_failure
 }
 
+# TC - 9
 @test "__hhs_ip_resolve forwards to dig when available" {
   stub_ifconfig
   stub_dig
@@ -302,6 +311,7 @@ load_network() {
   assert_output 'example.com'
 }
 
+# TC - 10
 @test "__hhs_ip_resolve is not defined when dig command is missing" {
   stub_ifconfig
   HHS_MISSING_CMDS="dig"

@@ -53,9 +53,9 @@ EOF
   run __hhs_xml_print '<root><child>1</child><child>2</child></root>'
   assert_success
 
-#  assert_output --partial '<root>'
-#  assert_output --partial '<child>1</child>'
-#  assert_output --partial '<child>2</child>'
+  assert_output --partial '<root>'
+  assert_output --partial '<child>1</child>'
+  assert_output --partial '<child>2</child>'
 }
 
 # TC - 4

@@ -34,54 +34,63 @@ setup() {
   assert_line --index 5 '}'
 }
 
+# TC - 3
 @test "fails when method is missing" {
   run "${APP}" https://example.com
   assert_failure
   assert_output --partial "fetch.bash  Invalid HTTP method: HTTPS://EXAMPLE.COM"
 }
 
+# TC - 4
 @test "fails when URL is missing" {
   run "${APP}" GET
   assert_failure
   assert_output --partial "fetch.bash  Missing required argument <url>"
 }
 
+# TC - 5
 @test "fails when both method and url are missing" {
   run "${APP}"
   assert_failure
   assert_output --partial "fetch.bash  Missing required arguments <method> and <url>"
 }
 
+# TC - 6
 @test "fails on unknown method" {
   run "${APP}" INVALID https://example.com
   assert_failure
   assert_output --partial "fetch.bash  Invalid HTTP method: INVALID"
 }
 
+# TC - 7
 @test "fails on unknown flag" {
   run "${APP}" --unknown GET https://example.com
   assert_failure
   assert_output --partial "fetch.bash  Unknown option"
 }
 
+# TC - 8
 @test "fails on --body without value" {
   run "${APP}" -b GET https://example.com
   assert_failure
   assert_output --partial "fetch.bash  --body requires a value."
 }
 
+# TC - 9
 @test "fails on --headers without value" {
   run "${APP}" -H GET https://example.com
   assert_failure
   assert_output --partial "fetch.bash  --headers requires a value."
 }
 
+# TC - 10
 @test "fails on --timeout with non-numeric value" {
   run "${APP}" -t abc GET https://example.com
   assert_failure
   assert_output --partial "fetch.bash  --timeout requires a numeric value."
 }
 
+# TC - 11
 @test "fails with timeout reached" {
   run "${APP}" -t 1 GET https://httpstat.us/200?sleep=5000
   assert_failure

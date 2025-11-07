@@ -30,6 +30,7 @@ teardown() {
   __HHS_MSELECT_STUB_STATUS=""
 }
 
+# TC - 1
 @test "change_dir changes into provided directory" {
   mkdir -p "alpha"
   __hhs_change_dir "${WORK_DIR}/alpha"
@@ -40,12 +41,14 @@ teardown() {
   [[ -f "${HHS_DIR}/.last_dirs" ]] || fail "expected .last_dirs to be created"
 }
 
+# TC - 2
 @test "change_dir reports missing directories" {
   run __hhs_change_dir "${WORK_DIR}/missing"
   assert_failure
   assert_output --partial "Directory \"${WORK_DIR}/missing\" was not found !"
 }
 
+# TC - 3
 @test "changeback_ndirs navigates backwards multiple levels" {
   mkdir -p "one/two/three"
   __hhs_change_dir "${WORK_DIR}/one/two/three"
@@ -61,6 +64,7 @@ teardown() {
   rm -f "${out_file}"
 }
 
+# TC - 4
 @test "changeback_ndirs surfaces seq errors for invalid counts" {
   mkdir -p "base/nested"
   __hhs_change_dir "${WORK_DIR}/base/nested"
@@ -76,6 +80,7 @@ teardown() {
   rm -f "${out_file}" "${err_file}"
 }
 
+# TC - 5
 @test "godir cd into provided path directly" {
   mkdir -p "direct"
   __hhs_godir "${WORK_DIR}/direct"
@@ -84,6 +89,7 @@ teardown() {
   assert_equal "$(pwd)" "${WORK_DIR}/direct"
 }
 
+# TC - 6
 @test "godir reports when directory is missing" {
   mkdir -p "search"
   cd "${WORK_DIR}/search"
@@ -92,6 +98,7 @@ teardown() {
   assert_output --partial "No matches for directory with name \"nomatch\""
 }
 
+# TC - 7
 @test "mkcd creates dotted path and jumps into it" {
   run __hhs_mkcd "foo.bar.baz"
   assert_success
@@ -99,6 +106,7 @@ teardown() {
   assert_output --partial "Directory changed to: ${WORK_DIR}/foo/bar/baz"
 }
 
+# TC - 8
 @test "mkcd fails when path points to existing file" {
   touch "conflict"
   run __hhs_mkcd conflict
@@ -106,6 +114,7 @@ teardown() {
   assert_output --partial "mkdir: conflict: File exists"
 }
 
+# TC - 9
 @test "dirs returns failure when selection is cancelled" {
   mkdir -p "first" "second"
   __hhs_change_dir "${WORK_DIR}/first"
@@ -116,6 +125,7 @@ teardown() {
   assert_failure
 }
 
+# TC - 10
 @test "save_dir persists absolute path entries" {
   mkdir -p "persist"
   run __hhs_save_dir "${WORK_DIR}/persist" workspace
@@ -125,6 +135,7 @@ teardown() {
   assert_output --partial "WORKSPACE=${WORK_DIR}/persist"
 }
 
+# TC - 11
 @test "save_dir warns when directory is absent" {
   run __hhs_save_dir "${WORK_DIR}/missing" ghost
   assert_success
@@ -132,6 +143,7 @@ teardown() {
   [[ ! -s "${HHS_SAVED_DIRS_FILE}" ]] || fail "unexpected entry for missing directory"
 }
 
+# TC - 12
 @test "load_dir changes to saved alias" {
   mkdir -p "persist"
   run __hhs_save_dir "${WORK_DIR}/persist" WORK
@@ -141,6 +153,7 @@ teardown() {
   assert_output "Directory changed to: \"${WORK_DIR}/persist\""
 }
 
+# TC - 13
 @test "load_dir warns about missing saved path" {
     mkdir -p "persist"
   run __hhs_save_dir "${WORK_DIR}/persist" WORK

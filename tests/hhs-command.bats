@@ -31,12 +31,6 @@ setup_file() {
 
 setup() {
   export OLDIFS="${IFS}"
-  export HHS_MY_OS="Linux"
-  export HHS_HIGHLIGHT_COLOR=""
-  export GREEN=""
-  export WHITE=""
-  export NC=""
-  export YELLOW=""
   unset EDITOR
 
   export HHS_DIR="${BATS_TEST_TMPDIR}/hhs-dir"

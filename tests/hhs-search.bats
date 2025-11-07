@@ -56,14 +56,14 @@ teardown() {
   rm -rf "${FIXTURE_ROOT}"
 }
 
-# --- __hhs_search_file -----------------------------------------------------
-
+# TC - 1
 @test "when-search-file-with-insufficient-arguments-then-prints-usage" {
   run __hhs_search_file -h
   assert_failure
   assert_output --partial "usage: __hhs_search_file <search_path> [file_globs...]"
 }
 
+# TC - 2
 @test "when-search-file-with-globs-then-builds-find-command" {
   : >"${HHS_LOG_FILE}"
   run __hhs_search_file "${SEARCH_FIXTURES}" "*.txt"
@@ -76,14 +76,14 @@ teardown() {
   assert_output --partial "-iname \"*.txt\""
 }
 
-# --- __hhs_search_dir ------------------------------------------------------
-
+# TC - 3
 @test "when-search-dir-with-insufficient-arguments-then-prints-usage" {
   run __hhs_search_dir --help
   assert_failure
   assert_output --partial "usage: __hhs_search_dir <search_path> [dir_globs...]"
 }
 
+# TC - 4
 @test "when-search-dir-with-globs-then-builds-find-command" {
   : >"${HHS_LOG_FILE}"
   run __hhs_search_dir "${SEARCH_FIXTURES}" "*nested*"
@@ -96,8 +96,7 @@ teardown() {
   assert_output --partial "-iname \"*nested*\""
 }
 
-# --- __hhs_search_string ---------------------------------------------------
-
+# TC - 5
 @test "when-search-string-with-default-regex-options-then-runs-grep-command" {
   : >"${HHS_LOG_FILE}"
   run __hhs_search_string "${SEARCH_FIXTURES}" "target" "*.txt"
@@ -109,6 +108,7 @@ teardown() {
   assert_output --partial "grep -HnEI \"target\""
 }
 
+# TC - 6
 @test "when-search-string-with-word-option-then-uses-fixed-word-grep" {
   : >"${HHS_LOG_FILE}"
   run __hhs_search_string "${SEARCH_FIXTURES}" -w "target" "*.txt"
@@ -120,6 +120,7 @@ teardown() {
   assert_output --partial "grep -HnFwI \"target\""
 }
 
+# TC - 7
 @test "when-search-string-with-ignore-case-and-binary-options-then-updates-flags" {
   : >"${HHS_LOG_FILE}"
   run __hhs_search_string "${SEARCH_FIXTURES}" -i -b "testing" "*.conf"
@@ -131,6 +132,7 @@ teardown() {
   assert_output --partial "grep -HnEi \"testing\""
 }
 
+# TC - 8
 @test "when-search-string-with-replace-option-then-substitutes-content" {
   : >"${HHS_LOG_FILE}"
   run __hhs_search_string "${SEARCH_FIXTURES}" -r "beta" "alpha" "*.conf"

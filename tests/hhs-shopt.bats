@@ -31,7 +31,7 @@ teardown() {
   rm -f "${HHS_SHOPTS_FILE}"
 }
 
-# TC - 1:
+# TC - 1
 @test "display-all-on-and-off-options" {
   run __hhs_shopt
   assert_success
@@ -39,7 +39,7 @@ teardown() {
   assert_output --partial "ON"
 }
 
-# TC - 2:
+# TC - 2
 @test "display-all-settable-options-with-p" {
   run __hhs_shopt -p
   assert_success
@@ -47,7 +47,7 @@ teardown() {
   assert_output --partial "ON"
 }
 
-# TC - 3:
+# TC - 3
 @test "display-all-unset-options" {
   run __hhs_shopt off
   assert_success
@@ -55,7 +55,7 @@ teardown() {
   run ! assert_output --partial "ON"
 }
 
-# TC - 4:
+# TC - 4
 @test "display-all-set-options" {
   run __hhs_shopt on
   assert_success
@@ -63,7 +63,7 @@ teardown() {
   run ! assert_output --partial "OFF"
 }
 
-# TC - 5:
+# TC - 5
 @test "when-set-options-with-s" {
   run __hhs_shopt -s cdspell
   assert_success
@@ -72,7 +72,7 @@ teardown() {
   assert_output --partial "cdspell=on"
 }
 
-# TC - 6:
+# TC - 6
 @test "when-unset-options-with-u" {
   run __hhs_shopt -u cdspell
   assert_success
@@ -81,7 +81,7 @@ teardown() {
   assert_output --partial "cdspell=off"
 }
 
-# TC - 7:
+# TC - 7
 @test "when-output-is-suppressed-with-q-for-set-options" {
   __hhs_shopt -s cdspell
   run __hhs_shopt -q cdspell
@@ -90,7 +90,7 @@ teardown() {
   [ -z "$error" ]
 }
 
-# TC - 8:
+# TC - 8
 @test "when-output-is-suppressed-with-q-for-unset-options" {
   __hhs_shopt -u cdspell
   run __hhs_shopt -q cdspell
@@ -99,14 +99,14 @@ teardown() {
   [ -z "$error" ]
 }
 
-# TC - 9:
+# TC - 9
 @test "when-restrict-optname-values-with-o" {
   run __hhs_shopt -o
   assert_success
   assert_output --partial "errexit"
 }
 
-# TC - 10:
+# TC - 10
 @test "when-handle-invalid-options-gracefully" {
   run __hhs_shopt -z
   assert_failure

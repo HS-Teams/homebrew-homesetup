@@ -11,20 +11,35 @@
 # Copyright (c) 2025, HomeSetup team
 
 load test_helper
+load "${HHS_FUNCTIONS_DIR}/hhs-built-ins.bash"
+load "${HHS_FUNCTIONS_DIR}/hhs-toml.bash"
 load_bats_libs
 
-PYTHON3="$(command -v python3)"
+setup() {
+  PYTHON3="$(command -v python3)" || fail "Python3 is not installed on this system!"
+  [[ -x "${PYTHON3}" ]] || fail "Python3 binary not executable!"
 
-PIP3="${PYTHON3} -m pip"
+  if ! "${PYTHON3}" -m pip --version &>/dev/null; then
+    fail "pip for Python3 is not installed or not working!"
+  fi
+  PIP3="${PYTHON3} -m pip"
+}
 
 # TC - 1
-@test "after-installation-homesetup-venv-should-be-properly-activate" {
-  run test -n "${VIRTUAL_ENV}"
-  [ "$status" -eq 0 ]
-  [[ "${VIRTUAL_ENV}" =~ ${HHS_VENV_PATH} ]]
+@test "venv-should-be-active" {
+  run __hhs_venv
+  assert_success
+  assert_output --partial "Virtual environment is Active"
 }
 
 # TC - 2
+@test "after-installation-homesetup-venv-should-be-properly-activate" {
+  run test -n "${VIRTUAL_ENV}"
+  assert_success
+  [[ "${VIRTUAL_ENV}" =~ ${HHS_VENV_PATH} ]]
+}
+
+# TC - 3
 @test "after-installation-hspylib-modules-should-report-their-versions" {
   declare -a modules=(
     'hspylib'
@@ -37,6 +52,6 @@ PIP3="${PYTHON3} -m pip"
 
   for next in "${modules[@]}"; do
     run ${PIP3} show "${next}"
-    [ "$status" -eq 0 ]
+    assert_success
   done
 }

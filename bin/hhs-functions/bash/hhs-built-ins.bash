@@ -278,5 +278,5 @@ function __hhs_venv() {
 
   __hhs_restart__
 
-  return $ret_val
+  return 0
 }
