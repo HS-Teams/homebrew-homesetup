@@ -122,7 +122,10 @@ function __hhs_ip_info() {
     return 1
   else
     ipinfo=$(curl -s --fail -m 3 "${ip_srv_url}" 2>/dev/null)
-    [[ -n "$ipinfo" ]] && __hhs_json_print "$ipinfo" && return 0
+    [[ -n "$ipinfo" ]] && {
+      __hhs_json_print "$ipinfo"
+      return 0
+    }
   fi
 
   return 1

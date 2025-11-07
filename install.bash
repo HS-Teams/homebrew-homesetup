@@ -430,6 +430,8 @@ usage: $APP_NAME [OPTIONS] <args>
   # Check HomeSetup required tools
   check_required_tools() {
 
+    local install update check_pkg tool_name pad pad_len
+
     [[ -n "${INSTALL_AI}" ]] && PYTHON_MODULES+=('hspylib-askai')
 
     # macOS
@@ -439,16 +441,18 @@ usage: $APP_NAME [OPTIONS] <args>
       DEPENDENCIES+=('sudo' 'xcode-select')
       [[ -n "${INSTALL_AI}" ]] &&
         DEPENDENCIES+=('ffmpeg' 'portaudio' 'libmagic')
-      install="${SUDO} brew install -f"
+      update="brew update"
+      install="brew install -f"
       check_pkg="brew list "
     # Debian: Ubuntu
-    elif has 'apt'; then
+    elif has 'apt-get'; then
       OS_TYPE='Debian'
-      OS_APP_MAN='apt'
+      OS_APP_MAN='apt-get'
       DEPENDENCIES+=('sudo' 'file' 'build-essential' 'python3' 'python3-pip')
       [[ -n "${INSTALL_AI}" ]] &&
         DEPENDENCIES+=('ffmpeg' 'python3-pyaudio' 'portaudio19-dev' 'libasound-dev' 'libmagic-dev')
-      install="${SUDO} apt install -y"
+      update="apt update"
+      install="apt install -y"
       check_pkg="apt list --installed | grep"
     # RedHat: Fedora, CentOS
     elif has 'yum'; then
@@ -457,7 +461,8 @@ usage: $APP_NAME [OPTIONS] <args>
       DEPENDENCIES+=('sudo' 'file' 'make' 'automake' 'gcc' 'gcc-c++' 'kernel-devel' 'python3' 'python3-pip')
       [[ -n "${INSTALL_AI}" ]] &&
         DEPENDENCIES+=('ffmpeg' 'python3-pyaudio' 'portaudio-devel' 'redhat-rpm-config' 'libmagic-dev')
-      install="${SUDO} yum install -y"
+      update="yum update"
+      install="yum install -y"
       check_pkg="yum list installed | grep"
     # Alpine: Busybox
     elif has 'apk'; then
@@ -465,6 +470,7 @@ usage: $APP_NAME [OPTIONS] <args>
       OS_APP_MAN='apk'
       DEPENDENCIES+=('file' 'python3' 'pip3')
       unset INSTALL_AI # AskAI is not tested on Alpine
+      update="apk update"
       install="apk add --no-cache"
       check_pkg="apk list | grep"
     # ArchLinux
@@ -473,7 +479,8 @@ usage: $APP_NAME [OPTIONS] <args>
       OS_APP_MAN='pacman'
       DEPENDENCIES+=('sudo' 'file' 'python3' 'python3-pip')
       unset INSTALL_AI # AskAI is not tested on ArchLinux
-      install="${SUDO} pacman -Sy"
+      update="pacman -Sy"
+      install="pacman -Sy"
       check_pkg="pacman -Q | grep"
     else
       quit 1 "Unable to find package manager for $(uname -s)"
@@ -500,7 +507,7 @@ usage: $APP_NAME [OPTIONS] <args>
     fi
 
     # Install packages using the default package manager
-    install_packages "${install}" "${check_pkg}" "${MISSING_DEPS[@]}"
+    install_packages "${install}" "${update}" "${check_pkg}" "${MISSING_DEPS[@]}"
     ensure_brew
   }
 
@@ -508,9 +515,24 @@ usage: $APP_NAME [OPTIONS] <args>
   # Install missing required tools.
   install_packages() {
 
-    local install="${1}" check_pkg="${2}" tools pkgs use_sudo=
+    local install="${1}" update="${2}" check_pkg="${3}" tools pkgs use_sudo=
 
-    shift 2
+    echo -en "${BLUE}[${OS_TYPE}] ${WHITE}Updating packages repositories using: ${YELLOW}\"${update}\"${NC}"
+    if ! ${update} >>"${INSTALL_LOG}" 2>&1; then
+      echo -e " ${RED}${FAIL_ICN} FAILED${NC}"
+      # 2nd Attempt to install packages using sudo.
+      has 'sudo' || quit 2 "Failed to update repositories. 'sudo' is not available"
+      [[ -z "${use_sudo}" && -n "${SUDO}" ]] && echo -e "\n${ORANGE}Retrying with 'sudo'. You may be prompted for password.${NC}\n"
+      update="${SUDO} ${update}"
+      if ! ${update} >>"${INSTALL_LOG}" 2>&1; then
+        quit 2 "Failed to update repositories. Please manually install the missing tools and try again."
+      fi
+      echo -e "${GREEN}[${OS_TYPE}] Repositories successfully updated!\"${NC}"
+    else
+      echo -e " ${GREEN}${SUCCESS_ICN} OK${NC}"
+    fi
+
+    shift 3
     tools=(${@})
     pkgs="${tools[*]}"
     pkgs="${pkgs// /\\n  |-}"

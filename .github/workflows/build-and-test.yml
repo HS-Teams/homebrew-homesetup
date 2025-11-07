@@ -80,13 +80,13 @@ jobs:
       DEEPL_API_KEY: "${{ secrets.DEEPL_API_KEY }}"
       OPENAI_API_KEY: "${{ secrets.OPENAI_API_KEY }}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ vars.PYTHON_VERSION }}
+          python-version: ${{ vars.PYTHON_MINOR_PATH }}
       - name: Update PIP
         run: pip install --upgrade pip
       - name: Install HomeSetup with Prefix

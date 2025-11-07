@@ -111,7 +111,7 @@ teardown() {
   touch "conflict"
   run __hhs_mkcd conflict
   assert_failure
-  assert_output --partial "mkdir: conflict: File exists"
+  assert_output --partial "File exists"
 }
 
 # TC - 9

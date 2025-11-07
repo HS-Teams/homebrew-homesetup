@@ -154,12 +154,15 @@ function __hhs_ascof() {
   elif __hhs_has od; then
     echo ''
     echo -en "${GREEN}Dec:${NC}"
-    echo -en "${@}" | od -An -t uC | head -n 1 | sed 's/^ */ /g'
+    echo -en "${@}" | od -An -t uC | head -n1 | awk '{for(i=1;i<=NF;i++)printf " %03d",$i;print ""}'
     echo -en "${GREEN}Hex:${NC}"
-    echo -en "${@}" | od -An -t xC | head -n 1 | sed 's/^ */ /g'
+    echo -en "${@}" | od -An -t xC | head -n 1 | awk '{for(i=1;i<=NF;i++)printf " %2d",$i;print ""}'
     echo -en "${GREEN}Str:${NC}"
     echo -e " ${*}"
     echo ''
+  else
+    __hhs_errcho "${FUNCNAME[0]}: 'od' command is required to run this function."
+    return 1
   fi
 
   return 0

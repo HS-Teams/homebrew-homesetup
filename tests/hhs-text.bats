@@ -34,6 +34,9 @@ EOF
 # TC - 2
 @test "when-jq-is-available-then-json-print-uses-it" {
   # Ensure jq is installed
+  if ! command -v jq >/dev/null; then
+    skip "jq is not installed"
+  fi
   run command -v jq
   assert_success
   run __hhs_json_print '{"foo": 1, "bar": 2}'
@@ -46,6 +49,9 @@ EOF
 # TC - 3
 @test "when-xmllint-is-available-then-xml-print-uses-it" {
   # Ensure xmllint is installed
+  if ! command -v xmllint >/dev/null; then
+    skip "xmllint is not installed"
+  fi
   run command -v xmllint
   assert_success
 
@@ -63,8 +69,8 @@ EOF
   run __hhs_ascof 'Hi'
 
   assert_success
-  assert_output --partial 'Dec: 72 105'
-  assert_output --partial 'Hex: 48  69'
+  assert_output --partial 'Dec: 072 105'
+  assert_output --partial 'Hex: 48 69'
   assert_output --partial 'Str: Hi'
 }
 

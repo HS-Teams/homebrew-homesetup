@@ -166,6 +166,8 @@ check_valid() {
 # @purpose: Parse command line arguments.
 parse_args() {
 
+  local oldifs="${IFS}"
+
   # If no argument is passed, just enter HomeSetup directory.
   if [[ ${#} -eq 0 ]]; then
     usage 0
@@ -200,7 +202,6 @@ parse_args() {
 
   IP_ADDRESS="${1}"
 
-  local oldifs="${IFS}"
   IFS='.'
   read -r -a IP_OCTETS <<< "${IP_ADDRESS}"
   IFS="${oldifs}"
@@ -218,7 +219,7 @@ main() {
       check_class
       check_scope
       echo "Valid IP: ${IP_ADDRESS}, Class: ${IP_CLASS}, Scope: ${IP_SCOPE}"
-      [[ ${EXTRA_INFO} -eq 0 ]] || __hhs_ip_info "${IP_ADDRESS}"
+      [[ ${EXTRA_INFO} -eq 1 ]] && __hhs_ip_info "${IP_ADDRESS}"
     fi
   else
     [[ ${SILENT} -eq 0 ]] && __hhs_errcho "${APP_NAME}" "Invalid IP: ${IP_ADDRESS}"
