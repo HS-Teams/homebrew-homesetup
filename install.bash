@@ -17,7 +17,7 @@
   APP_NAME="${0##*/}"
 
   # HomeSetup Installation version
-  VERSION="1.8.28"
+  VERSION="1.8.30"
 
   # Help message to be displayed by the script
   USAGE="
