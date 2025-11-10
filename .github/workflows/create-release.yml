@@ -51,7 +51,7 @@ jobs:
           ref: ${{ needs.details.outputs.tag_name }}
       - name: Create Changelog
         id: change-log
-        uses: yorevs/hspylib/.github/actions/changelog@master
+        uses: HS-Teams/hspylib/.github/actions/changelog@master
         with:
           tag-name: ${{ needs.details.outputs.tag_name }}
       - name: Create GitHub Release
