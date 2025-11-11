@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
     ### Removed
 
-## 1.8.1 - 2024-11-26
+## 1.9.1 - YYY-MM-DD
 
 ## Unreleased
 
@@ -29,6 +29,54 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 ### Removed
 
+
+## 1.8.1 - 2024-11-26 → 2025-11-11
+
+### Fixed
+
+* Fixed Installer CLI options, uninstall cleanup, and dependency validation
+* Fixed Fetch script header parsing and request formatting
+* Fixed JSON formatting and version fixture generation
+* Fixed Updater, environment variables, and venv activation/deactivation behavior
+* Fixed Listing display, error output, and text formatting in `__hhs_errcho` and related helpers
+* Fixed Ownership and permissions in changelog and GitHub Actions
+* Fixed Homebrew installation formula, dependency resolution, and brew handling across multiple iterations
+* Fixed Dockerfile builds, multi-distro compatibility (Alpine, Fedora, CentOS, Ubuntu), and image publishing pipeline
+* Fixed GHA (GitHub Actions) build workflows, docker-deploy, and release jobs
+* Fixed Version bump workflow and revision tracking during bumpver auto-tagging
+* Fixed Tests and CI pipeline executions for stability and environment consistency
+
+### Updated
+
+* Updated Shell scripts (`hhs-dirs`, `__hhs_errcho`, `__hhs_utoh`, etc.) for cleaner output and bug fixes
+* Updated Package manager definitions and dependencies
+* Updated Dockerfiles and related assets to reflect latest environment adjustments
+* Updated Configuration files for WezTerm, Zsh, NeoVim, and terminal assets
+* Updated Documentation, handbook wording, and repository metadata
+* Updated Copyright, author info, and contact details
+* Updated GitHub Actions to latest versions and improved workflow consistency
+* Updated Prompt tools integration and auxiliary shell scripts for modern presets
+* Updated Bats tests and internal helpers for improved validation
+* Updated Changelog generation scripts for consistent tagging
+
+### Removed
+
+* Removed Deprecated Glow integration from required tools list
+* Removed Redundant or legacy installer logic
+
+### Added
+
+* Added Complete Bats test coverage for all HHS components (CLI, paths, files, functions, utilities, search, sys, etc.)
+* Added JSON formatting to fetch script and expanded CLI argument parsing
+* Added Venv management, auto-reload of environment, and dependency reloading behavior
+* Added Password generator (`__hhs_pwgen`) and clipboard enhancements
+* Added New setup and init logs for diagnostics
+* Added Profile activators and tool helpers for TUI/CLI integration
+* Added NeoVim and WezTerm configuration assets
+* Added Docker cleanup and Python package maintenance scripts
+* Added Support for starship prompt, zoxide, and delta integration
+* Added Auto-tag and Gradle publish workflow improvements
+* Added New changelog automation and release versioning
 
 ## 1.7.1 - 2023-12-28
 
