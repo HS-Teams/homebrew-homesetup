@@ -680,7 +680,7 @@ usage: $APP_NAME [OPTIONS] <args>
     [[ -z ${HOMEBREW_INSTALLING} ]] && is_brew='No'
     [[ -z ${GITHUB_ACTIONS} ]] && is_gha='No'
 
-    echo ''
+    echo -e '\n'
     echo -e "${WHITE}### ${GREEN}HomeSetup© ${WHITE}Installation Settings ###${NC}"
     echo -e ""
     echo -e "${WHITE}          Shell: ${YELLOW}${MY_OS}-${MY_OS_NAME}/${SHELL_TYPE}"

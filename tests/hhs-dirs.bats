@@ -103,7 +103,7 @@ teardown() {
   run __hhs_mkcd "foo.bar.baz"
   assert_success
   [[ -d "${WORK_DIR}/foo/bar/baz" ]] || fail "expected directory tree to exist"
-  assert_output --partial "Directory changed to: ${WORK_DIR}/foo/bar/baz"
+  assert_output --partial "Current dir changed to: ${WORK_DIR}/foo/bar/baz"
 }
 
 # TC - 8

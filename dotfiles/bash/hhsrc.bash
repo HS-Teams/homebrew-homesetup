@@ -375,6 +375,13 @@ diff_time=$((finished - started))
 diff_time_sec=$((diff_time/1000))
 diff_time_ms=$((diff_time-(diff_time_sec*1000)))
 
+# Bash hooks
+function command_not_found_handle() {
+    __hhs_errcho "bash" "Command not found: \"\033[9m${1}\033[m\""
+    echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1' or 'which $1' for hints.${NC}"
+    return 127
+}
+
 __hhs_log "INFO" "HomeSetup initialization completed in ${diff_time_sec}s ${diff_time_ms}ms" >>"${HHS_LOG_FILE}"
 echo '' >>"${HHS_LOG_FILE}"
 
