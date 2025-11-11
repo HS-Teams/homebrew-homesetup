@@ -54,12 +54,12 @@ function __hhs_change_dir() {
   path="${path//\~/${HOME}}"
 
   if [[ ! -d "${path}" ]]; then
-    if ! __hhs_has 'z' || ! z "$path" &> /dev/null; then
+    if ! __hhs_has 'z' || ! \z "$path" &> /dev/null; then
       __hhs_errcho "${FUNCNAME[0]}" "Directory \"${path}\" was not found !"
     fi
   else
-    # shellcheck disable=SC2086
     if
+      # shellcheck disable=SC2086
       \cd ${flags} "${path}" &> /dev/null \
         && \pushd -n "$(pwd)" &> /dev/null \
         && \dirs -p | uniq > "${HHS_DIR}/.last_dirs"
@@ -89,13 +89,10 @@ function __hhs_changeback_ndirs() {
 
   last_pwd=$(pwd)
 
-  if [[ -z "$1" ]]; then
-    \cd ..
+  if [[ -z "$1" ]] && __hhs_change_dir ..; then
     echo "${GREEN}Changed current directory: ${WHITE}\"$(pwd)\"${NC}"
   elif [[ -n "$1" ]]; then
-    for x in $(seq 1 "$1"); do
-      \cd .. || return 1
-    done
+    for x in $(seq 1 "$1"); do __hhs_change_dir ..; done
     echo "${GREEN}Changed directory backwards by ${x} time(s) and landed at: ${WHITE}\"$(pwd)\"${NC}"
     [[ -d "${last_pwd}" ]] && export OLDPWD="${last_pwd}" && export CURPWD="${last_pwd}"
   fi
@@ -103,40 +100,89 @@ function __hhs_changeback_ndirs() {
   return 0
 }
 
-# @function: Display the list of currently remembered directories.
+# @function: Display the list of currently remembered directories or select one to switch into.
+# @param $1..$N [Opt]: Optional flags or arguments passed to the builtin 'dirs' command.
 function __hhs_dirs() {
+  local mselect_file sel_dir len ret_val=0 max_len columns=80 type_icon=" "
+  local line opt="${1}"
+  local -a results=() all_dirs=()
 
-  local mselect_file sel_dir results=() len ret_val=0
-
-  # If any argument is passed, use the old style dirs
-  if [[ $# -gt 0 ]]; then
-    \dirs "${@}"
-    return $?
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "usage: ${FUNCNAME[0]} [OPTION]"
+    echo ''
+    echo 'Options: '
+    echo "         -c : Clear the directory stack"
+    echo "         -s : List the directory stack (space separated and absolute paths)"
+    echo "         -l : List all remembered directories (stack + dirs file) (decorated absolute paths)"
+    echo "         -p : Print each directory on a new line"
+    echo "         -v : Print the directory stack with variable index notation"
+    echo "    +N / -N : Display or rotate to the Nth entry in the directory stack"
+    return 0
   fi
 
-  read -r -d '\n' -a results <<< "$(dirs -p -l | sort | uniq)"
-  len=${#results[@]}
+  # If the reset argument is passed, clear the persisted dirs file
+  [[ "$*" == *"-c"* ]] && { : > "${HHS_DIRS_FILE}" ; \dirs -c; return $?; }
+  # Replace -s with -l to list the dirs stack in long format
+  [[ "${opt}" == "-s" ]] && { \dirs "-l" ; return $?; }
+  # If any argument is passed, use the builtin 'dirs' with provided args
+  [[ $# -gt 0 && "${opt}" != "-l" ]] && { \dirs "$@" ; return $?; }
 
-  if [[ ${len} -eq 0 ]]; then
-    echo "${YELLOW}No currently directories available yet in \"${HHS_SAVED_DIRS_FILE}\" !${NC}"
-  elif [[ ${len} -eq 1 ]]; then
-    echo "${results[*]}"
-  else
-    mselect_file=$(mktemp)
-    if __hhs_mselect "${mselect_file}" "Please choose one directory to change into (${len}) found:" "${results[@]}"; then
-      sel_dir=$(grep . "${mselect_file}")
-      if [[ -n "${sel_dir}" ]]; then
-        [[ ! -d "${sel_dir}" ]] && __hhs_errcho "${FUNCNAME[0]}" "Directory \"${sel_dir}\" was not found !" && ret_val=1
+  # Load saved directories from file
+  [[ -f "${HHS_DIRS_FILE}" ]] && {
+    while IFS= read -r line; do [[ -d "${line}" ]] && results+=("${line}"); done < "${HHS_DIRS_FILE}"
+  }
+
+  # Append current shell dirs stack
+  while IFS= read -r line; do [[ -d "${line}" ]] && results+=("${line}"); done < <(dirs -p -l)
+
+  # Deduplicate and sort
+  while IFS= read -r line; do all_dirs+=("$line"); done < <(printf "%s\n" "${results[@]}" | sort -u)
+  len=${#all_dirs[@]}
+
+  if [[ "$1" == "-l" ]]; then
+    columns=$(tput cols)
+    columns=${columns:-80}
+    max_len=$((columns - 10))
+    max_len=${max_len:-10}
+    for ((i = 0; i < ${#all_dirs[@]}; i++)); do
+      dir="${all_dirs[i]}"
+      [[ -L "${dir}" && -d "${dir}" ]] && type_icon=" "
+      [[ -d "${dir}" ]] && type_icon=" "
+      if (( ${#dir} > max_len )); then
+        printf "\n  %*d: %s %s" "${#len}" "${i}" "${type_icon}" "${HHS_HIGHLIGHT_COLOR}…${dir: -max_len}${NC}"
       else
+        printf "\n  %*d: %s %s" "${#len}" "${i}" "${type_icon}" "${HHS_HIGHLIGHT_COLOR}${dir}${NC}"
+      fi
+    done
+    echo ''
+    return 0
+  fi
+
+  if [[ ${len} -le 1 && "$(pwd)" == "${OLDPWD}" ]]; then
+    echo "${ORANGE}No currently directories available yet !${NC}"
+    return 0
+  fi
+
+  mselect_file=$(mktemp)
+  if __hhs_mselect "${mselect_file}" "Please choose one directory to change into (${len}):" "${all_dirs[@]}"; then
+    sel_dir=$(grep . "${mselect_file}")
+    if [[ -n "${sel_dir}" ]]; then
+      if [[ -d "${sel_dir}" ]]; then
+        __hhs_change_dir "${sel_dir}" || ret_val=1
+      else
+        __hhs_errcho "${FUNCNAME[0]}" "Directory \"${sel_dir}\" was not found !"
         ret_val=1
       fi
     else
       ret_val=1
     fi
+  else
+    ret_val=1
   fi
+  [[ -f "${mselect_file}" ]] && rm -f "${mselect_file}" &>/dev/null
 
-  echo ''
-  [[ ${ret_val} -eq 0 ]] && \cd "${sel_dir}" || return 1
+  # Persist updated list back to file
+  [[ ${#all_dirs[@]} -gt 0 ]] && printf "%s\n" "${all_dirs[@]}" > "${HHS_DIRS_FILE}"
 
   return ${ret_val}
 }
@@ -191,55 +237,55 @@ function __hhs_save_dir() {
     echo "    -e : Edit the saved dirs file."
     echo "    -r : Remove saved dir."
     echo "    -c : Cleanup directory paths that does not exist."
-  else
+    return 0
+  fi
 
-    dir_alias=$(echo -en "${2:-$1}" | tr -s '[:space:]' '_' | tr '[:lower:]' '[:upper:]')
-    dir_alias=$(tr '[:punct:]' '_' <<< "${dir_alias}")
+  dir_alias=$(echo -en "${2:-$1}" | tr -s '[:space:]' '_' | tr '[:lower:]' '[:upper:]')
+  dir_alias=$(tr '[:punct:]' '_' <<< "${dir_alias}")
 
-    if [[ "$1" == "-e" ]]; then
-      __hhs_edit "${HHS_SAVED_DIRS_FILE}"
-      return $?
-    elif [[ "$1" == "-r" && -n "$2" ]]; then
-      # Remove the previously saved directory aliased
-      if grep -q "${dir_alias}" "${HHS_SAVED_DIRS_FILE}"; then
-        ised -e "s#(^${dir_alias}=.*)*##g" -e '/^\s*$/d' "${HHS_SAVED_DIRS_FILE}"
-        echo "${YELLOW}Directory aliased as ${HHS_HIGHLIGHT_COLOR}\"${dir_alias}\" ${YELLOW}was removed!${NC}"
-        ret_val=0
-      fi
-    elif [[ "$1" == "-c" ]]; then
-      read -d '' -r -a all_dirs < "${HHS_SAVED_DIRS_FILE}"
-      for idx in $(seq 1 "${#all_dirs[@]}"); do
-        dir=${all_dirs[idx - 1]}
-        dir_alias=${dir%%=*}
-        dir=${dir#*=}
-        [[ -d "${dir}" ]] && dirs+=("${dir_alias}=${dir}")
-        printf "%s\n" "${dirs[@]}" > "${HHS_SAVED_DIRS_FILE}"
-      done
-    elif [[ -n "$2" && -n "${dir_alias}" ]]; then
-      dir="$1"
-      # If the path is not absolute, append the current directory to it.
-      if [[ -z "${dir}" || "${dir}" == "." ]]; then dir=${dir//./$(pwd)}; fi
-      if [[ -d "${dir}" && ! "${dir}" =~ ^/ ]]; then dir="$(pwd)/${dir}"; fi
-      if [[ -n "${dir}" && "${dir}" == ".." ]]; then dir=${dir//../$(pwd)}; fi
-      if [[ -n "${dir}" && "${dir}" == "-" ]]; then dir=${dir//-/$OLDPWD}; fi
-      if [[ -n "${dir}" && ! -d "${dir}" ]]; then
-        __hhs_errcho "${FUNCNAME[0]}" "Directory \"${dir}\" does not exist !"
-        ret_val=0
-      else
-        # Remove the old saved directory aliased
-        ised -e "s#(^${dir_alias}=.*)*##g" -e '/^\s*$/d' "${HHS_SAVED_DIRS_FILE}"
-        read -d '' -r -a all_dirs < "${HHS_SAVED_DIRS_FILE}"
-        all_dirs+=("${dir_alias}=${dir}")
-        printf "%s\n" "${all_dirs[@]}" > "${HHS_SAVED_DIRS_FILE}"
-        sort -u "${HHS_SAVED_DIRS_FILE}" -o "${HHS_SAVED_DIRS_FILE}"
-        if grep -q "$dir_alias" "${HHS_SAVED_DIRS_FILE}"; then
-          echo "${GREEN}Directory ${WHITE}\"${dir}\" ${GREEN}saved as ${HHS_HIGHLIGHT_COLOR}${dir_alias} ${NC}"
-          ret_val=0
-        fi
-      fi
-    else
-      __hhs_errcho "${FUNCNAME[0]}" "Invalid alias \"${2}\" !"
+  if [[ "$1" == "-e" ]]; then
+    __hhs_edit "${HHS_SAVED_DIRS_FILE}"
+    return $?
+  elif [[ "$1" == "-r" && -n "$2" ]]; then
+    # Remove the previously saved directory aliased
+    if grep -q "${dir_alias}" "${HHS_SAVED_DIRS_FILE}"; then
+      ised -e "s#(^${dir_alias}=.*)*##g" -e '/^\s*$/d' "${HHS_SAVED_DIRS_FILE}"
+      echo "${YELLOW}Directory aliased as ${HHS_HIGHLIGHT_COLOR}\"${dir_alias}\" ${YELLOW}was removed!${NC}"
+      ret_val=0
     fi
+  elif [[ "$1" == "-c" ]]; then
+    read -d '' -r -a all_dirs < "${HHS_SAVED_DIRS_FILE}"
+    for idx in $(seq 1 "${#all_dirs[@]}"); do
+      dir=${all_dirs[idx - 1]}
+      dir_alias=${dir%%=*}
+      dir=${dir#*=}
+      [[ -d "${dir}" ]] && dirs+=("${dir_alias}=${dir}")
+      printf "%s\n" "${dirs[@]}" > "${HHS_SAVED_DIRS_FILE}"
+    done
+  elif [[ -n "$2" && -n "${dir_alias}" ]]; then
+    dir="$1"
+    # If the path is not absolute, append the current directory to it.
+    if [[ -z "${dir}" || "${dir}" == "." ]]; then dir=${dir//./$(pwd)}; fi
+    if [[ -d "${dir}" && ! "${dir}" =~ ^/ ]]; then dir="$(pwd)/${dir}"; fi
+    if [[ -n "${dir}" && "${dir}" == ".." ]]; then dir=${dir//../$(pwd)}; fi
+    if [[ -n "${dir}" && "${dir}" == "-" ]]; then dir=${dir//-/$OLDPWD}; fi
+    if [[ -n "${dir}" && ! -d "${dir}" ]]; then
+      __hhs_errcho "${FUNCNAME[0]}" "Directory \"${dir}\" does not exist !"
+      ret_val=0
+    else
+      # Remove the old saved directory aliased
+      ised -e "s#(^${dir_alias}=.*)*##g" -e '/^\s*$/d' "${HHS_SAVED_DIRS_FILE}"
+      read -d '' -r -a all_dirs < "${HHS_SAVED_DIRS_FILE}"
+      all_dirs+=("${dir_alias}=${dir}")
+      printf "%s\n" "${all_dirs[@]}" > "${HHS_SAVED_DIRS_FILE}"
+      sort -u "${HHS_SAVED_DIRS_FILE}" -o "${HHS_SAVED_DIRS_FILE}"
+      if grep -q "$dir_alias" "${HHS_SAVED_DIRS_FILE}"; then
+        echo "${GREEN}Directory ${WHITE}\"${dir}\" ${GREEN}saved as ${HHS_HIGHLIGHT_COLOR}${dir_alias} ${NC}"
+        ret_val=0
+      fi
+    fi
+  else
+    __hhs_errcho "${FUNCNAME[0]}" "Invalid alias \"${2}\" !"
   fi
 
   return ${ret_val}
@@ -321,10 +367,7 @@ function __hhs_load_dir() {
       esac
 
       if [[ -n "${dir}" && -d "${dir}" ]]; then
-        __hhs_change_dir "${dir}" &> /dev/null || {
-          __hhs_errcho "${FUNCNAME[0]}" "Unable to change to directory: \"${dir}\""
-          return 1
-        }
+        __hhs_change_dir "${dir}" &> /dev/null || return 1
         echo "${GREEN}Directory changed to: ${WHITE}\"$(pwd)\""
         ret_val=0
       elif [[ -n "${dir}" && ! -d "${dir}" ]]; then
@@ -392,10 +435,6 @@ function __hhs_godir() {
   if [[ ${ret_val} -eq 0 && -n "${dir}" && -d "${dir}" ]]; then
     if __hhs_change_dir "${dir}" &> /dev/null; then
       echo "${GREEN}Directory changed to: ${WHITE}\"$(pwd)\"${NC}"
-      ret_val=0
-    else
-      __hhs_errcho "Unable to change to directory: ${WHITE}\"${dir}\""
-      ret_val=1
     fi
   fi
 
@@ -408,7 +447,9 @@ function __hhs_godir() {
 # @param $1 [Req] : The directory tree to create, using slash (/) or dot (.) notation path.
 function __hhs_mkcd() {
 
-  local ret_val=1
+  local ret_val=1 last_pwd dir_tree count
+
+  last_pwd=$(pwd)
 
   if [[ $# -lt 1 || "$1" == "-h" || "$1" == "--help" ]]; then
     echo "usage: ${FUNCNAME[0]} <dirtree | package>"
@@ -420,21 +461,19 @@ function __hhs_mkcd() {
     dir_tree="${1//.//}"
     dir_tree="${dir_tree//-//}"
     \mkdir -p "${dir_tree}" || {
-      __hhs_errcho "${FUNCNAME[0]}" "   Failed to change into directory: ${WHITE}${dir}"
+      __hhs_errcho "${FUNCNAME[0]}" "   Failed to create directory: ${WHITE}${dir}"
       return 1
     }
-    last_pwd=$(pwd)
     IFS=$'/'
-    for dir in ${dir_tree}; do
-      \cd "${dir}" || {
-      __hhs_errcho "${FUNCNAME[0]}" "   Failed to change into directory: ${WHITE}${dir}"
-      return 1
-    }
-    done
+    count=$(( $(awk -F'/' '{print NF-1}' <<< "${dir_tree}") + 1 ))
+    for dir in ${dir_tree}; do __hhs_change_dir "${dir}" || return 1; done
     IFS="${OLDIFS}"
     export OLDPWD=${last_pwd}
-    echo -e "${GREEN}   Directories created: ${WHITE}./${dir_tree}${NC}"
-    echo -e "${GREEN}  Directory changed to: ${WHITE}$(pwd)${NC}"
+    echo ''
+    echo -e "${GREEN}     Previous directory: ${CYAN}${OLDPWD}"
+    echo -e "${GREEN}    Directories created: ${BLUE}${dir_tree} (${count})"
+    echo -e "${GREEN} Current dir changed to: ${WHITE}$(pwd)"
+    echo -e "${NC}"
     return 0
   fi
 

@@ -121,6 +121,7 @@ export HHS_FIREBASE_CREDS_FILE="${HHS_DIR}/{project_id}-firebase-credentials.jso
 export HHS_PATHS_FILE="${HHS_DIR}/.path"
 export HHS_PUNCH_FILE="${HHS_DIR}/.punches"
 export HHS_SAVED_DIRS_FILE="${HHS_DIR}/.saved_dirs"
+export HHS_DIRS_FILE="${HHS_DIR}/.dirs"
 export HHS_SETMAN_CONFIG_FILE="${HHS_DIR}/setman.properties"
 export HHS_SETMAN_DB_FILE="${HHS_DIR}/setman.db"
 export HHS_VAULT_FILE="${HHS_DIR}/.vault"
@@ -189,8 +190,6 @@ DEVELOPER_TOOLS=(
 
 )
 
-if [[ "Darwin" == "${HHS_MY_OS}" ]]; then
-  DEVELOPER_TOOLS+=('brew' 'xcode-select')
-fi
+[[ "Darwin" == "${HHS_MY_OS}" ]] && DEVELOPER_TOOLS+=('brew' 'xcode-select')
 
 export HHS_DEV_TOOLS="${HHS_DEV_TOOLS:-"${DEVELOPER_TOOLS[@]}"}"
