@@ -17,11 +17,11 @@ VERSION="1.0.0"
 PLUGIN_NAME="ask"
 
 UNSETS=(
-  help version cleanup execute
+  help version cleanup execute show_context clear_context
 )
 
 # Usage message
-USAGE="usage: ${APP_NAME} <question>
+USAGE="usage: ${APP_NAME} [options] <question>
 
     _        _
    / \\   ___| | __
@@ -31,8 +31,14 @@ USAGE="usage: ${APP_NAME} <question>
 
   Offline ollama-AI agent integration for HomeSetup v${VERSION}.
 
+    options:
+      -h, --help       show this help message and exit
+      -v, --version    show version and exit
+      -c, --context    show current ollama context (history) and exit
+      -r, --reset      reset history before executing (fresh new session) and exit
+
     arguments:
-      question    : the question to make to Ollama.
+      question         the question to ask Ollama
 "
 
 # Read context from ollama history file
@@ -45,10 +51,11 @@ Your task is to act as an advanced AI assistant integrated into **HomeSetup** (a
 You are responsible for system setup, configuration, and management.
 You MUST deliver concise, technically accurate, unbiased responses.
 You are running in a ${HHS_MY_SHELL} shell on the following OS: ${HHS_MY_OS_RELEASE}.
+HomeSetup repository is: https://github.com/HS-Teams/homesetup
 
 ### IMPORTANT ###
-Always look the provided context before answering. If the context does not contain relevant information for the
-response, answer based on your best knowledge but keep it brief.
+ALWAYS LOOK THE PROVIDED CONTEXT BEFORE ANSWERING.
+- If the context does not contain relevant information for the response, answer based on your best knowledge but keep it brief.
 
 ### REQUIREMENTS ###
 - All answers MUST match the system SHELL and OS specified above.
@@ -61,7 +68,7 @@ response, answer based on your best knowledge but keep it brief.
 - Respond with the minimum necessary detail.
 - For terminal commands: - explain briefly - provide only the command(s) needed - avoid lengthy explanations
 - When suggesting configurations or commands, consider security, efficiency, and user-friendliness.
-- If unsure about a solution, ask the user to search google, create a good google query for the user to copy and paste.
+- If unsure about the answer say: 'Sorry, but I don't know.'. Don't try to make up an answer.
 - Ensure that your answer is unbiased and does not rely on stereotypes.
 - When the question is personal, or, unrelated to (HomeSetup, terminals, or system configuration), be kind, answering
 using your best knowledge but keep it brief.
@@ -89,14 +96,37 @@ function cleanup() {
   echo -n ''
 }
 
+function show_context() {
+  local viewer='cat'
+  __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
+  if [[ -f "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
+    $viewer "${HHS_OLLAMA_HISTORY_FILE}"
+    quit 0
+  fi
+
+  quit 1 "${RED}Ollama history file not found${NC}"
+}
+
+function clear_context() {
+  if [[ -s "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
+    : > "${HHS_OLLAMA_HISTORY_FILE}" || quit 2 "Unable to clear ollama history file"
+    echo -e "${GREEN}Ollama history cleared${NC}"
+    quit 0
+  fi
+
+  quit 1 "${RED}Ollama history file not found or empty${NC}"
+}
+
 # @purpose: HHS plugin required function
 function execute() {
-  local args ans query resp viewer='cat' ret_val
+  local args ans query resp viewer='cat' ret_val mb_size=10
 
   declare -a args=()
 
   [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]] && usage 0
   [[ "$1" == "-v" || "$1" == "--version" ]] && version
+  [[ "$1" == "-c" || "$1" == "--context" ]] && show_context
+  [[ "$1" == "-r" || "$1" == "--reset" ]] && clear_context
 
   if [[ "${HHS_USE_OFFLINE_AI}" -ne 1 ]] && ! __hhs_has ollama; then
     echo -en "${YELLOW}Offline Ollama-AI is not available. Install it [y]/n? ${NC}"
@@ -123,13 +153,15 @@ function execute() {
     [[ ! "$arg" =~ ^-[a-zA-Z] ]] && args+=("$arg")
   done
 
-  # Max history file size: 10MB
-  HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((10 * 1024 * 1024))
+  # Max history file size
+  HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((mb_size * 1024 * 1024))
+  # Use markdown viewer if available
+  __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
 
   if [ -f "$HHS_OLLAMA_HISTORY_FILE" ]; then
     size=$(stat -c %s "$HHS_OLLAMA_HISTORY_FILE" 2>/dev/null || wc -c < "$HHS_OLLAMA_HISTORY_FILE")
     if [ "$size" -gt "$HHS_OLLAMA_MAX_HIST_FILE_SIZE" ]; then
-      tail -c 10M "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
+      tail -c "${mb_size}M" "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
       mv "${HHS_OLLAMA_HISTORY_FILE}.tmp" "${HHS_OLLAMA_HISTORY_FILE}"
     fi
   fi
@@ -147,7 +179,6 @@ function execute() {
   printf '\033[H\033[2J\033[3J'
   echo -e "✨ ${GREEN}HomeSetup:\n${NC}"
 
-  __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
   $viewer "${resp}"
 
   [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
