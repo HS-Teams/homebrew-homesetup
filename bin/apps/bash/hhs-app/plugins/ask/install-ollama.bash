@@ -15,15 +15,20 @@
 # Install Ollama-AI
 install_ollama() {
   if [[ "$(uname -s)" == "Darwin" ]]; then
-    brew install ollama
-    brew services start ollama
+    brew install ollama || return 2
+    brew services start ollama || return 2
   else
     curl -fsSL https://ollama.com/install.sh | sh
-    systemctl enable ollama || true
-    systemctl start ollama || true
+    if systemctl enable ollama && systemctl start ollama; then
+      return 0
+    else
+      nohup ollama serve >/var/log/ollama.log 2>&1 &
+      pid=$!
+      kill -0 "$pid" 2>/dev/null || return 2
+    fi
   fi
 
-  return $?
+  return 0
 }
 
 # Pull the HomeSetup model
