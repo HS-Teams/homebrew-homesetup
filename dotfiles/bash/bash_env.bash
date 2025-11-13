@@ -144,8 +144,6 @@ export HHS_VAULT_USER="${USER}"
 
 # Ollama-AI
 if __hhs_has 'ollama'; then
-  # Models: bin/apps/bash/hhs-app/plugins/ask/models.md
-  export HHS_OLLAMA_MODEL="${HHS_OLLAMA_MODEL:-phi3:mini}"
   export HHS_OLLAMA_HISTORY_FILE="${HHS_OLLAMA_HISTORY_FILE:-${HHS_DIR}/.ollama_history}"
   export HHS_OLLAMA_MD_VIEWER="${HHS_OLLAMA_MD_VIEWER:-__hhs_glow}"
 fi

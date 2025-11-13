@@ -1,0 +1,16 @@
+phi3:mini:~2.2 GB
+phi3:medium:~7.9 GB
+qwen:0.5b:~0.4–0.6 GB
+qwen:1.8b:~1–2 GB
+qwen:4b:~2–3 GB
+qwen:7b:~4–5 GB
+qwen:14b:~8–10 GB
+qwen2.5:7b:~4–5 GB
+qwen2.5-coder:7b:~4–5 GB
+qwen3:8b:~4–5 GB
+mistral:7b:~4.1 GB
+llama3:8b:~4–5 GB
+llama3:70b:~43 GB
+gemma2:2b:~1.6 GB
+gemma2:9b:~5–6 GB
+gemma2:27b:~16 GB

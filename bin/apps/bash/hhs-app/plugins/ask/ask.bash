@@ -32,11 +32,12 @@ USAGE="usage: ${APP_NAME} [options] <question>
   Offline ollama-AI agent integration for HomeSetup v${VERSION}.
 
     options:
-      -h, --help        show this help message and exit
-      -v, --version     show version and exit
-      -c, --context     show current ollama context (history) and exit
-      -r, --reset       reset history before executing (fresh new session) and exit
-      -m, --models      list available ollama models and exit
+      -h, --help                        show this help message and exit
+      -v, --version                     show version and exit
+      -c, --context                     show current ollama context (history) and exit
+      -r, --reset                       reset history before executing (fresh new session) and exit
+      -m, --models                      list available ollama models and exit
+      -s, --select-model [model_name]   select the ollama model to use
 
     arguments:
       question         the question to ask Ollama
@@ -84,6 +85,10 @@ ${CONTEXT}
 ### TASK ###
 Answer the following question accurately and as briefly as possible.
 "
+
+# Ollama model to use
+HHS_OLLAMA_MODEL=$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")
+HHS_OLLAMA_MODEL="${HHS_OLLAMA_MODEL#*=}"
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 
@@ -145,9 +150,50 @@ function show_models() {
   quit 0
 }
 
+# @purpose: Select ollama model to use
+# shellcheck disable=SC2120
+function select_ollama_model() {
+  local model_name="${1}" title all_models model available
+
+  declare -a all_models=() available=()
+
+  if [[ -z "${model_name}" ]]; then
+    # Available models
+    while IFS= read -r line; do available+=( "$line" ); done < <(ollama list | tail -n +2 | awk '{print $1}')
+    # All models
+    while IFS= read -r model; do
+      model_name=$(printf "%s" "$model" | cut -d':' -f1-2)
+      [[ $model == *"$HHS_OLLAMA_MODEL"* ]] && model="${GREEN}${model}${NC}"
+      [[ " ${available[*]} " == *" ${model_name} "* ]] || model="${GRAY}${model}${NC}"
+      all_models+=("${model}")
+    done < <(grep . "$HHS_HOME/bin/apps/bash/hhs-app/plugins/ask/ollama-models.txt")
+    title="${BLUE}Select the Ask Ollama model${NC}"
+    mchoose_file=$(mktemp)
+    if __hhs_mselect "${mchoose_file}" "${title}" "${all_models[@]}"; then
+      model_name=$(cut -d':' -f1-2 <<< "$(grep . "${mchoose_file}")")
+      model_name=$(printf '%s' "${model_name}" | sed 's/\x1b\[[0-9;]*m//g')
+      if ! __hhs_toml_set "${HHS_SETUP_FILE}" "hhs_ollama_model=${model_name}" "ollama"; then
+        quit 2 "Unable to change ollama model: \"${model}\""
+      fi
+    else
+      quit 1
+    fi
+  fi
+
+  if [[ -n "${model_name}" ]]; then
+    if ! __hhs_toml_set "${HHS_SETUP_FILE}" "hhs_ollama_model=${model_name}" "ollama"; then
+      quit 2 "Unable to set ollama model: ${model_name}!"
+    fi
+  fi
+
+  export HHS_OLLAMA_MODEL="${model_name}"
+  echo -e "${GREEN}Ollama model set to '${model_name}'.${NC}"
+  quit 0
+}
+
 # @purpose: HHS plugin required function
 function execute() {
-  local args ans query resp viewer='cat' ret_val mb_size=10
+  local args ans query resp viewer='cat' ret_val kb_size=128 model
 
   declare -a args=()
 
@@ -156,6 +202,7 @@ function execute() {
   [[ "$1" == "-c" || "$1" == "--context" ]] && show_context
   [[ "$1" == "-r" || "$1" == "--reset" ]] && clear_context
   [[ "$1" == "-m" || "$1" == "--models" ]] && show_models
+  [[ "$1" == "-s" || "$1" == "--select-model" ]] && select_ollama_model
 
   if [[ "${HHS_USE_OFFLINE_AI}" -ne 1 ]] && ! __hhs_has ollama; then
     echo -en "${YELLOW}Offline Ollama-AI is not available. Install it [y]/n? ${NC}"
@@ -183,13 +230,13 @@ function execute() {
   done
 
   # Max history file size
-  HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((mb_size * 1024 * 1024))
+  HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((kb_size * 1024))
   # Use markdown viewer if available
   __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
   if [ -f "$HHS_OLLAMA_HISTORY_FILE" ]; then
     size=$(stat -c %s "$HHS_OLLAMA_HISTORY_FILE" 2>/dev/null || wc -c < "$HHS_OLLAMA_HISTORY_FILE")
     if [ "$size" -gt "$HHS_OLLAMA_MAX_HIST_FILE_SIZE" ]; then
-      tail -c "${mb_size}M" "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
+      tail -c "${kb_size}K" "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
       mv "${HHS_OLLAMA_HISTORY_FILE}.tmp" "${HHS_OLLAMA_HISTORY_FILE}"
     fi
   fi
@@ -204,6 +251,10 @@ function execute() {
     "${HHS_OLLAMA_PROMPT}" "${query}" \
     | ollama run "${HHS_OLLAMA_MODEL}" \
     | tee -a "${resp}"
+  [[ -s "${resp}" ]] || {
+    [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
+    quit 1 "Ollama execution failed"
+  }
   echo -e "## [$(date '+%H:%M')] AI: \n$(cat "${resp}")" >> "${HHS_OLLAMA_HISTORY_FILE}"
   ret_val=${PIPESTATUS[1]}
   printf '\033[H\033[2J\033[3J'
