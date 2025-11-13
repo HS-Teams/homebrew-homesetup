@@ -126,11 +126,13 @@ function execute() {
   # Max history file size: 10MB
   HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((10 * 1024 * 1024))
 
-  if [[ -f "${HHS_OLLAMA_HISTORY_FILE}" ]] && (( $(stat -f%z "${HHS_OLLAMA_HISTORY_FILE}" 2>/dev/null) > HHS_OLLAMA_MAX_HIST_FILE_SIZE )); then
-    tail -c 10M "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
-    mv "${HHS_OLLAMA_HISTORY_FILE}.tmp" "${HHS_OLLAMA_HISTORY_FILE}"
+  if [ -f "$HHS_OLLAMA_HISTORY_FILE" ]; then
+    size=$(stat -c %s "$HHS_OLLAMA_HISTORY_FILE" 2>/dev/null || wc -c < "$HHS_OLLAMA_HISTORY_FILE")
+    if [ "$size" -gt "$HHS_OLLAMA_MAX_HIST_FILE_SIZE" ]; then
+      tail -c 10M "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
+      mv "${HHS_OLLAMA_HISTORY_FILE}.tmp" "${HHS_OLLAMA_HISTORY_FILE}"
+    fi
   fi
-
   resp="$(mktemp /tmp/hhs-ollama-response.XXXXXX)" || quit 1 "Failed to create temporary file."
   query="${args[*]}"
   grep -q '^### Started:' "${HHS_OLLAMA_HISTORY_FILE}" || echo "### Started: $(date +%F)" >> "${HHS_OLLAMA_HISTORY_FILE}"
