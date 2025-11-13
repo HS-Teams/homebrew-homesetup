@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2068
+
+function _which_() {
+  if command -v ollama &>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+function _install_() {
+  local pkg_url
+  local install_script="/tmp/ollama-install.sh"
+
+  pkg_url="https://ollama.com/download/OllamaInstall.sh"
+
+  if curl -fsSL "$pkg_url" -o "$install_script"; then
+    chmod +x "$install_script"
+    if bash "$install_script"; then
+      rm -f "$install_script"
+      return 0
+    fi
+  fi
+
+  rm -f "$install_script"
+
+  return 1
+}
+
+function _uninstall_() {
+  if command -v ollama &>/dev/null; then
+    ollama uninstall
+    return 0
+  fi
+
+  return 1
+}

@@ -378,7 +378,7 @@ diff_time_ms=$((diff_time-(diff_time_sec*1000)))
 # Bash hooks
 function command_not_found_handle() {
     __hhs_errcho "bash" "Command not found: \"\033[9m${1}\033[m\""
-    echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1' or 'which $1' for hints.${NC}"
+    echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1', 'which $1' or ask '<your question> for help'.${NC}"
     return 127
 }
 

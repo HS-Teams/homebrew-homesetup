@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2068
+
+function _which_() {
+  if command -v ollama &>/dev/null || brew list --formula | grep -q '^ollama$'; then
+    return 0
+  fi
+  return 1
+}
+
+function _install_() {
+  if brew install ollama; then
+    return 0
+  fi
+  return 1
+}
+
+function _uninstall_() {
+  if brew uninstall ollama; then
+    return 0
+  fi
+  return 1
+}

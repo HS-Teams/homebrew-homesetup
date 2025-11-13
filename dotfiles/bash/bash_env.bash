@@ -142,6 +142,14 @@ export HHS_VAULT_USER="${USER}"
 # ----------------------------------------------------------------------------
 # Integrations
 
+# Ollama-AI
+if __hhs_has 'ollama'; then
+  # Models: bin/apps/bash/hhs-app/plugins/ask/models.md
+  export HHS_OLLAMA_MODEL="${HHS_OLLAMA_MODEL:-qwen2.5-coder:7b}"
+  export HHS_OLLAMA_HISTORY_FILE="${HHS_OLLAMA_HISTORY_FILE:-${HHS_DIR}/.ollama_history}"
+  export HHS_OLLAMA_MD_VIEWER="glow"
+fi
+
 # Hunspell
 if __hhs_has 'hunspell'; then
   export DICPATH="${HHS_DIR}/hunspell-dicts"
@@ -186,7 +194,7 @@ DEVELOPER_TOOLS=(
   'gcc' 'make' 'gradle'
   'jq' 'sqlite3' 'gawk' 'hunspell'
   'bat' 'fd' 'nvim' 'delta' 'tldr' 'zoxide' 'glow' 'btop'
-  'colorls' 'fzf' 'starship' 'gtrash' 'atuin'
+  'colorls' 'fzf' 'starship' 'gtrash' 'atuin' 'ollama'
 
 )
 
