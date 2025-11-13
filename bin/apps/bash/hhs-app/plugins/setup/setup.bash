@@ -19,7 +19,7 @@ UNSETS=(
 )
 
 # Current hhs setup version
-VERSION="1.0.10"
+VERSION="1.0.12"
 
 # Usage message
 USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [-restore]
@@ -84,12 +84,12 @@ function execute() {
   fi
 
   while read -r setting; do
-    if [[ ${setting} =~ ${RE_PROPERTY} ]]; then
-      name="${BASH_REMATCH[1]}" && value="${BASH_REMATCH[2]}"
-      value="${value//true/True}" && value="${value//false/False}"
-      all_items+=("${name}=${value}")
-    fi
-  done <"${HHS_SETUP_FILE}"
+    name="${setting%%=*}"
+    value="${setting#*=}"
+    value="${value//true/True}"
+    value="${value//false/False}"
+    all_items+=("${name}=${value}")
+  done < <(__hhs_toml_get_all "${HHS_SETUP_FILE}" "setup")
 
   title="${BLUE}HomeSetup Initialization Settings${ORANGE} ${GREEN}v${VERSION}\n"
   title+="${ORANGE}Please mark the preferred startup settings:"

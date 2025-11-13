@@ -105,8 +105,8 @@ unset PROMPT_COMMAND
 # ----------------------------------------------------------------------------
 # HomeSetup variables
 
-export HHS_GITHUB_URL='https://github.com/yorevs/homesetup'
-export HHS_ASKAI_URL='https://github.com/yorevs/askai'
+export HHS_GITHUB_URL='https://github.com/HS-Teams/homesetup'
+export HHS_ASKAI_URL='https://github.com/HS-Teams/askai'
 export HHS_HAS_DOCKER=$(__hhs_has docker && docker info &> /dev/null && echo '1')
 export HHS_AI_ENABLED=$(__hhs_has_module hspylib-askai &>/dev/null && echo '1')
 
@@ -147,7 +147,7 @@ if __hhs_has 'ollama'; then
   # Models: bin/apps/bash/hhs-app/plugins/ask/models.md
   export HHS_OLLAMA_MODEL="${HHS_OLLAMA_MODEL:-phi3:mini}"
   export HHS_OLLAMA_HISTORY_FILE="${HHS_OLLAMA_HISTORY_FILE:-${HHS_DIR}/.ollama_history}"
-  export HHS_OLLAMA_MD_VIEWER="${HHS_OLLAMA_MD_VIEWER:-glow}"
+  export HHS_OLLAMA_MD_VIEWER="${HHS_OLLAMA_MD_VIEWER:-__hhs_glow}"
 fi
 
 # Hunspell
@@ -157,7 +157,12 @@ if __hhs_has 'hunspell'; then
 fi
 
 # Glow
-export GLOW_CONFIG_FILE="${HHS_DIR}/.glow.yml"
+if __hhs_has 'glow'; then
+  [[ -s "${HHS_DIR}/.glow.yml" ]] || \cp "${HHS_HOME}/dotfiles/glow.yml" "${HHS_DIR}/.glow.yml"
+  function __hhs_glow() {
+    glow -w 120 -s "dracula" "${@}"
+  }
+fi
 
 # Starship variables
 export STARSHIP_CONFIG="${STARSHIP_CONFIG=${HHS_DIR}/.starship.toml}"

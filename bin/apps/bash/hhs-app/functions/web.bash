@@ -14,7 +14,7 @@
 # @purpose: Open the HomeSetup GitHub page.
 function github() {
 
-  local page_url="https://github.com/yorevs/homesetup"
+  local page_url="${HHS_GITHUB_URL}"
 
   echo -e "${BLUE}${GLOBE_ICN} Opening HomeSetup github page from: ${page_url}${ELLIPSIS_ICN}${NC}"
   __hhs_open "${page_url}" && sleep 2 && quit 0

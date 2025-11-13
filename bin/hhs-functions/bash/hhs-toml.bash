@@ -189,3 +189,39 @@ function __hhs_toml_keys() {
   [[ $count -gt 0 ]] && return 0
   [[ $count -le 0 ]] && return 1
 }
+
+# @function: Print all key=value pairs from a toml group.
+# @param $1 [Req]: The toml file.
+# @param $2 [Opt]: The group (root if omitted).
+function __hhs_toml_get_all() {
+  local file="${1}" group="${2}" re_group re_kv group_match
+
+  if [[ -z "${file}" ]]; then
+    __hhs_errcho "${FUNCNAME[0]}" "The file parameter must be provided."
+    return 1
+  elif [[ ! -s "${file}" ]]; then
+    __hhs_errcho "${FUNCNAME[0]}" "The file \"${file}\" does not exists or is empty."
+    return 1
+  fi
+
+  re_group="^\[([a-zA-Z0-9_.]+)\] *"
+  re_kv="^([a-zA-Z0-9_.]+) *= *(.*)"
+
+  while read -r line; do
+    if [[ -z "${group}" && ${line} =~ ${re_group} ]]; then
+      break
+    elif [[ -n "${group_match}" && ${line} =~ ${re_group} ]]; then
+      break
+    elif [[ ${line} =~ ${re_kv} ]]; then
+      if [[ -z "${group}" ]]; then
+        echo "${BASH_REMATCH[1]}=${BASH_REMATCH[2]//[\"\']/}"
+      elif [[ -n "${group_match}" ]]; then
+        echo "${BASH_REMATCH[1]}=${BASH_REMATCH[2]//[\"\']/}"
+      fi
+    elif [[ ${line} =~ ${re_group} ]]; then
+      if [[ "${BASH_REMATCH[1]}" == "${group}" ]]; then
+        group_match="${group}"
+      fi
+    fi
+  done < "${file}"
+}
