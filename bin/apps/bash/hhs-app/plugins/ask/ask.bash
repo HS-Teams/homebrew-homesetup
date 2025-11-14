@@ -17,7 +17,7 @@ VERSION="1.0.0"
 PLUGIN_NAME="ask"
 
 UNSETS=(
-  help version cleanup execute show_context clear_context show_models
+  help version cleanup execute show_context clear_context show_models start_ollama select_ollama_model
 )
 
 # Usage message
@@ -43,47 +43,53 @@ USAGE="usage: ${APP_NAME} [options] <question>
       question         the question to ask Ollama
 "
 
-# Read context from ollama history file
-[[ -s "${HHS_OLLAMA_HISTORY_FILE}" ]] && \
-  CONTEXT="\n### CONTEXT ###\n$(grep . "${HHS_OLLAMA_HISTORY_FILE}")"
+# Read context from ollama history file if not piped
+[[ "${IS_PIPED}" -ne 1 && -s "${HHS_OLLAMA_HISTORY_FILE}" ]] && \
+  CONTEXT="$(grep . "${HHS_OLLAMA_HISTORY_FILE}")"
+
+# Read context from stdin if piped
+[[ "${IS_PIPED}" -eq 1 ]] &&
+  read -t 0 < /dev/stdin && CONTEXT="$(cat -)"
 
 # Ollama-AI prompt
 HHS_OLLAMA_PROMPT="### INSTRUCTIONS ###
-Your task is to act as an advanced AI assistant integrated into **HomeSetup** (acronym 'hhs').
-You are responsible for system setup, configuration, and management.
-You MUST deliver concise, technically accurate, unbiased responses.
-You are running in a ${HHS_MY_SHELL} shell on the following OS: ${HHS_MY_OS_RELEASE}.
-Prioritize platform-specific commands for ${HHS_MY_SHELL} and ${HHS_MY_OS_RELEASE}, then fall back to generic Linux kernel utilities.
+You are an advanced AI assistant integrated into **HomeSetup** (acronym: hhs).
+Your responsibilities include system setup, configuration, diagnostics, and management.
+
+You execute inside a ${HHS_MY_SHELL} shell on **${HHS_MY_OS_RELEASE}**.
+Always prefer macOS-specific commands, falling back to generic POSIX/Linux only when unavoidable.
 
 ### HomeSetup Information ###
-- installed at: ${HHS_HOME}
-- usage document: ${HHS_HOME}/docs/USAGE.md
-- handbook document: ${HHS_HOME}/docs/handbook/handbook.md
-- repository is: ${HHS_GITHUB_URL}
+- installation path: ${HHS_HOME}
+- usage docs: ${HHS_HOME}/docs/USAGE.md
+- handbook: ${HHS_HOME}/docs/handbook/handbook.md
+- repository: ${HHS_GITHUB_URL}
 
 ### SYSTEM RULES ###
-1. ALWAYS read the provided CONTEXT before answering.
-2. If the context does not contain relevant information, answer using your best knowledge, but be brief.
-3. All answers MUST follow the system SHELL and OS declared above.
-4. Understand the user’s intent precisely and answer only what is being asked.
-5. Provide practical, actionable steps or commands when useful.
-6. Keep the response short, clear, and technically correct.
-7. Avoid unnecessary jargon or explanations.
-8. For terminal commands:
-   - give only what is required
-   - add a one-line explanation only if needed
-   - avoid long descriptions
-9. When suggesting configurations or commands:
-   - prioritize security, efficiency, and simplicity
-10. If you are unsure about the answer, reply: 'Sorry, but I don't know.'
-11. Do NOT invent information. No guesses.
-12. Maintain a professional, neutral, and helpful tone.
-13. Personal or unrelated questions: answer kindly, briefly, and without bias.
 
-${CONTEXT}
+1. **The CONTEXT provided with every request is the primary and authoritative source of truth.**
+2. You MUST ALWAYS read and analyze the CONTEXT fully before answering.
+3. Derive the answer strictly from the CONTEXT when possible.
+4. Only when the CONTEXT does not contain the required information, you may fall back to your internal knowledge.
+5. NEVER contradict or ignore the CONTEXT.
+6. Before answering, silently follow this reasoning flow:
+   a) Read the entire CONTEXT.
+   b) Extract all relevant data.
+   c) Check if the question can be answered only from the CONTEXT.
+   d) If YES → answer using ONLY the CONTEXT.
+   e) If NO → answer briefly using internal knowledge.
+7. When providing terminal commands:
+   - keep them minimal
+   - no unnecessary flags
+   - add at most a one-line explanation
+8. Keep all answers short, direct, and technically accurate.
+9. Avoid any unnecessary explanations, filler, or narrative text.
+10. Do NOT guess. If uncertain, respond exactly: **\"Sorry, but I don't know.\"**
+11. Maintain a professional, neutral tone.
+12. Personal or unrelated questions: answer briefly and without bias.
 
 ### TASK ###
-Answer the following question accurately and as briefly as possible.
+Answer the user’s question accurately and as briefly as possible.
 "
 
 # Ollama model to use
@@ -109,12 +115,21 @@ function cleanup() {
   echo -n ''
 }
 
+# @purpose: Start ollama server, if not running, in background
+function start_ollama() {
+  if ! ollama ps &>/dev/null; then
+    nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &
+    pid=$!
+    kill -0 "$pid" 2>/dev/null || return 2
+  fi
+
+  return 0
+}
+
 # @purpose: Show ollama history file contents (context)
 function show_context() {
-  local viewer='cat'
-  __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
   if [[ -f "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
-    $viewer "${HHS_OLLAMA_HISTORY_FILE}"
+    ${HHS_OLLAMA_MD_VIEWER} < "${HHS_OLLAMA_HISTORY_FILE}"
     quit 0
   fi
 
@@ -134,11 +149,9 @@ function clear_context() {
 
 # @purpose: Show available ollama models (local and for download)
 function show_models() {
-    local viewer='cat'
-  __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
   echo -e "${BLUE}Available to download:"
-  $viewer "${HHS_HOME}/bin/apps/bash/hhs-app/plugins/ask/ollama-models.md"
-  __hhs_has ollama && {
+  ${HHS_OLLAMA_MD_VIEWER} < "${HHS_HOME}/bin/apps/bash/hhs-app/plugins/ask/ollama-models.md"
+  __hhs_has ollama && ollama ps &>/dev/null && {
     echo -e "${BLUE}Available locally:\n${WHITE}"
     IFS=$'\n'
     for m in $(ollama list | nl); do
@@ -154,7 +167,6 @@ function show_models() {
 # shellcheck disable=SC2120
 function select_ollama_model() {
   local model_name="${1}" title all_models model available
-
   declare -a all_models=() available=()
 
   if [[ -z "${model_name}" ]]; then
@@ -190,21 +202,9 @@ function select_ollama_model() {
   quit 0
 }
 
-# @purpose: Start ollama server, if not running, in background
-function start_ollama() {
-  if ! ollama ps &>/dev/null; then
-    nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &
-    pid=$!
-    kill -0 "$pid" 2>/dev/null || return 2
-  fi
-
-  return 0
-}
-
 # @purpose: HHS plugin required function
 function execute() {
-  local args ans query resp viewer='cat' ret_val kb_size=128 model
-
+  local args ans query="Hello" resp ret_val kb_size=128 model
   declare -a args=()
 
   [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]] && usage 0
@@ -235,14 +235,11 @@ function execute() {
 
   [[ "${HHS_USE_OFFLINE_AI}" -eq 1 ]] || quit 1 "Ollama-AI is not enabled. Enable it and try again (__hhs setup) !"
 
-  for arg in "$@"; do
-    [[ ! "$arg" =~ ^-[a-zA-Z] ]] && args+=("$arg")
-  done
+  for arg in "$@"; do [[ ! "$arg" =~ ^-[a-zA-Z] ]] && args+=("$arg"); done
 
-  # Max history file size
+  query="${args[*]}";
+
   HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((kb_size * 1024))
-  # Use markdown viewer if available
-  __hhs_has "${HHS_OLLAMA_MD_VIEWER}" && viewer="${HHS_OLLAMA_MD_VIEWER}"
   if [ -f "$HHS_OLLAMA_HISTORY_FILE" ]; then
     size=$(stat -c %s "$HHS_OLLAMA_HISTORY_FILE" 2>/dev/null || wc -c < "$HHS_OLLAMA_HISTORY_FILE")
     if [ "$size" -gt "$HHS_OLLAMA_MAX_HIST_FILE_SIZE" ]; then
@@ -254,28 +251,28 @@ function execute() {
   # Question & Answer
   start_ollama &> /dev/null
   resp="$(mktemp /tmp/hhs-ollama-response.XXXXXX)" || quit 1 "Failed to create temporary file."
-  query="${args[*]}"
   grep -q '^### Started:' "${HHS_OLLAMA_HISTORY_FILE}" || echo "### Started: $(date +%F)" >> "${HHS_OLLAMA_HISTORY_FILE}"
   echo -e "## [$(date '+%H:%M')] User: \n${query}" >> "${HHS_OLLAMA_HISTORY_FILE}"
   echo -e "✨ ${GREEN}${HHS_OLLAMA_MODEL}:\n${NC}"
-  printf '\n%s:\n### USER INPUT ###\n\n%s' \
-    "${HHS_OLLAMA_PROMPT}" "${query}" \
-    | ollama run "${HHS_OLLAMA_MODEL}" \
-    | tee -a "${resp}"
-  [[ -s "${resp}" ]] || {
-    [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
-    quit 1 "Ollama execution failed"
-  }
-  echo -e "## [$(date '+%H:%M')] AI: \n$(cat "${resp}")" >> "${HHS_OLLAMA_HISTORY_FILE}"
+  printf '%s### CONTEXT ###\n%s\n\n### USER INPUT ###\n\n%s\n' \
+    "$HHS_OLLAMA_PROMPT" "$CONTEXT" "${query}" |
+    ollama run "$HHS_OLLAMA_MODEL" |
+    tee -a "$resp"
   ret_val=${PIPESTATUS[1]}
-  printf '\033[H\033[2J\033[3J'
-  echo -e "✨ ${GREEN}${HHS_OLLAMA_MODEL}:\n${NC}"
-  $viewer "${resp}"
+
+  # Display the response
+  if [[ -s "${resp}" ]]; then
+    echo -e "## [$(date '+%H:%M')] AI: \n$(cat "${resp}")" >> "${HHS_OLLAMA_HISTORY_FILE}"
+    printf '\033[H\033[2J\033[3J'
+    echo -e "✨ ${GREEN}${HHS_OLLAMA_MODEL}:\t${GRAY}${resp}\n${NC}"
+    ${HHS_OLLAMA_MD_VIEWER} < "${resp}"
+  else
+    echo -e "${ERROR_ICN} ${RED}Ollama failed to respond${NC}"
+    ret_val=1
+  fi
 
   # Cleanup
-  __hhs_process_kill -f ollama &> /dev/null
   [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
-  [[ ${ret_val} -eq 0 ]] && quit 0
 
-  quit 1 "Failed to execute Ask"
+  quit "${ret_val}"
 }

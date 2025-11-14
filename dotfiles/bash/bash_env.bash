@@ -145,7 +145,7 @@ export HHS_VAULT_USER="${USER}"
 # Ollama-AI
 if __hhs_has 'ollama'; then
   export HHS_OLLAMA_HISTORY_FILE="${HHS_OLLAMA_HISTORY_FILE:-${HHS_DIR}/.ollama_history}"
-  export HHS_OLLAMA_MD_VIEWER="${HHS_OLLAMA_MD_VIEWER:-__hhs_glow}"
+  export HHS_OLLAMA_MD_VIEWER="${HHS_OLLAMA_MD_VIEWER:-__hhs_md_viewer}"
 fi
 
 # Hunspell
@@ -157,9 +157,6 @@ fi
 # Glow
 if __hhs_has 'glow'; then
   [[ -s "${HHS_DIR}/.glow.yml" ]] || \cp "${HHS_HOME}/dotfiles/glow.yml" "${HHS_DIR}/.glow.yml"
-  function __hhs_glow() {
-    glow -w 120 -s "dracula" "${@}"
-  }
 fi
 
 # Starship variables

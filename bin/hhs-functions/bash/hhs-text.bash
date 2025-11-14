@@ -14,6 +14,7 @@
 # @function: Highlight words from the piped stream.
 # @param $1 [Req] : The word to highlight.
 # @param $1 [Pip] : The piped input stream.
+# shellcheck disable=SC2120
 function __hhs_highlight() {
 
   local search file hl_color="${HHS_HIGHLIGHT_COLOR}"
@@ -208,3 +209,18 @@ if __hhs_has "hexdump"; then
     return ${ret_val}
   }
 fi
+
+# @function: View markdown files with syntax highlighting.
+# @param $1..$N [Req] : The markdown file(s) to view
+function __hhs_md_viewer() {
+  # Glow
+  if __hhs_has 'glow'; then
+    glow -w 120 -s "dracula" "${@}"
+  elif __hhs_has 'mdless'; then
+    mdless "${@}"
+  elif __hhs_has 'bat'; then
+    bat "${@}"
+  else
+    cat "${@}"
+  fi
+}

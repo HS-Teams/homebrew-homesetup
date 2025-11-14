@@ -81,12 +81,12 @@ function __hhs_is_venv() {
 }
 
 # @function: Make sure HomeSetup venv is active.
-# @param $1 [Req] : The application or function name.
+# @param $1 [Opt] : The application or function name.
 function __hhs_ensure_venv() {
 
   __hhs_is_venv && return 0
 
-  __hhs_errcho "${1:-${FUNCNAME[1]}}" "Not available when HomeSetup python venv is not active!"
+  __hhs_errcho "${1:-'script'}" "NOT available when HomeSetup python venv is not active!"
 
   return 1
 }

@@ -85,6 +85,9 @@ PLUGINS_LIST=()
 # List plugin commands.
 PLUGINS=()
 
+# When set to non-zero indicates input is being piped.
+IS_PIPED=
+
 # @purpose: Checks whether a plugin is registered or not.
 # @param $1 [Req] : The plugin name.
 function has_function() {
@@ -403,8 +406,6 @@ function command_hint() {
     quit 1  # Exit with an error
 }
 
-
-
 # ------------------------------------------
 # Basics
 
@@ -482,6 +483,12 @@ function main() {
 
   quit 255 "Failed to invoke hhs command: ${*}"
 }
+
+if [[ -t 0 ]]; then
+  IS_PIPED=0
+else
+  IS_PIPED=1
+fi
 
 main "${@}"
 quit 1
