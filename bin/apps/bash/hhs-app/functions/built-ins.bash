@@ -245,6 +245,7 @@ function reset() {
     "${HOME}/.inputrc"
     "${HHS_SETUP_FILE}"
     "${HHS_SHOPTS_FILE}"
+    "${HHS_OLLAMA_HISTORY_FILE}"
   )
 
   __hhs_has 'colorls' && gem which colorls &>/dev/null && all_files+=("$(dirname "$(gem which colorls)")/yaml/*.yaml")

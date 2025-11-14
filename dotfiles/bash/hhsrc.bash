@@ -123,20 +123,26 @@ source "${HHS_HOME}/dotfiles/bash/bash_commons.bash"
 started="$(${PYTHON3} -c 'import time; print(int(time.time() * 1000))')"
 echo -e "HomeSetup is starting: $(date)\n" >"${HHS_LOG_FILE}"
 
-# Initialization setup.
+# Initialization setup (homesetup.toml).
 if [[ ! -s "${HHS_SETUP_FILE}" ]]; then
   __hhs_log "WARN" "HomeSetup initialization file '${HHS_SETUP_FILE}' was not found. Using defaults."
   \cp "${HHS_HOME}/dotfiles/homesetup.toml" "${HHS_SETUP_FILE}"
 fi
 re='^([a-zA-Z0-9_.]+) *= *(.*)'
 while read -r pref; do
-  if [[ ${pref} =~ $re ]]; then
-    pref="$(tr '[:lower:]' '[:upper:]' <<<"${BASH_REMATCH[1]}=${BASH_REMATCH[2]}")"
-    pref="${pref//TRUE/1}" && pref="${pref//FALSE/}"
-    export "${pref?}"
+  if [[ ${pref} =~ ${re} ]]; then
+    key="${BASH_REMATCH[1]}"
+    val="${BASH_REMATCH[2]}"
+    case "$(tr '[:lower:]' '[:upper:]' <<<"${val}")" in
+      TRUE)  val=1 ;;
+      FALSE) val="" ;;
+    esac
+    val="${val//\"/}"
+    val="${val//\'/}"
+    key=$(tr '[:lower:]' '[:upper:]' <<<"${key}")
+    export "${key}=${val}"
   fi
 done <"${HHS_SETUP_FILE}"
-__hhs_log "INFO" "Initialization settings have been loaded from '${HHS_SETUP_FILE}'"
 
 # !!!Settings are available as environment variables from this point.!!!
 

@@ -93,8 +93,10 @@ Answer the user’s question accurately and as briefly as possible.
 "
 
 # Ollama model to use
-HHS_OLLAMA_MODEL=$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")
-HHS_OLLAMA_MODEL="${HHS_OLLAMA_MODEL#*=}"
+ollama_model=$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")
+ollama_model="${ollama_model#*=}"
+ollama_model="${ollama_model//\"/}"
+ollama_model="${ollama_model//\'/}"
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 
@@ -155,7 +157,7 @@ function show_models() {
     echo -e "${BLUE}Available locally:\n${WHITE}"
     IFS=$'\n'
     for m in $(ollama list | nl); do
-      [[ "${m}" =~ .*${HHS_OLLAMA_MODEL}.* ]] && echo -e "${HHS_HIGHLIGHT_COLOR}${m}\t (current)${NC}" && continue
+      [[ "${m}" =~ .*${ollama_model}.* ]] && echo -e "${HHS_HIGHLIGHT_COLOR}${m}\t (current)${NC}" && continue
       echo -e "${m}"
     done
     IFS="$OLDIFS"
@@ -175,7 +177,7 @@ function select_ollama_model() {
     # All models
     while IFS= read -r model; do
       model_name=$(printf "%s" "$model" | cut -d':' -f1-2)
-      [[ $model == *"$HHS_OLLAMA_MODEL"* ]] && model="${GREEN}${model}${NC}"
+      [[ $model == *"${ollama_model}"* ]] && model="${GREEN}${model}${NC}"
       [[ " ${available[*]} " == *" ${model_name} "* ]] || model="${GRAY}${model}${NC}"
       all_models+=("${model}")
     done < <(grep . "$HHS_HOME/bin/apps/bash/hhs-app/plugins/ask/ollama-models.txt")
@@ -214,7 +216,9 @@ function execute() {
   [[ "$1" == "-m" || "$1" == "--models" ]] && show_models
   [[ "$1" == "-s" || "$1" == "--select-model" ]] && shift && select_ollama_model "$@"
 
-  if [[ "${HHS_USE_OFFLINE_AI}" -ne 1 ]] || ! __hhs_has ollama; then
+  [[ "${HHS_OLLAMA_AI_AUTOSTART}" -eq 1 ]] || quit 1 "Ollama-AI is not enabled. Enable it and try again (__hhs setup) !"
+
+  if [[ "${HHS_OLLAMA_AI_AUTOSTART}" -ne 1 ]] || ! __hhs_has ollama; then
     echo -en "${YELLOW}Offline Ollama-AI is not available. Install it [y]/n? ${NC}"
     read -r -n 1 ans
     echo
@@ -232,8 +236,6 @@ function execute() {
       quit 1 "Offline Ollama-AI is required to use this feature."
     fi
   fi
-
-  [[ "${HHS_USE_OFFLINE_AI}" -eq 1 ]] || quit 1 "Ollama-AI is not enabled. Enable it and try again (__hhs setup) !"
 
   for arg in "$@"; do [[ ! "$arg" =~ ^-[a-zA-Z] ]] && args+=("$arg"); done
 
@@ -253,10 +255,10 @@ function execute() {
   resp="$(mktemp /tmp/hhs-ollama-response.XXXXXX)" || quit 1 "Failed to create temporary file."
   grep -q '^### Started:' "${HHS_OLLAMA_HISTORY_FILE}" || echo "### Started: $(date +%F)" >> "${HHS_OLLAMA_HISTORY_FILE}"
   echo -e "## [$(date '+%H:%M')] User: \n${query}" >> "${HHS_OLLAMA_HISTORY_FILE}"
-  echo -e "✨ ${GREEN}${HHS_OLLAMA_MODEL}:\n${NC}"
+  echo -e "✨ ${GREEN}${ollama_model}:\n${NC}"
   printf '%s### CONTEXT ###\n%s\n\n### USER INPUT ###\n\n%s\n' \
     "$HHS_OLLAMA_PROMPT" "$CONTEXT" "${query}" |
-    ollama run "$HHS_OLLAMA_MODEL" |
+    ollama run "${ollama_model}" |
     tee -a "$resp"
   ret_val=${PIPESTATUS[1]}
 
@@ -264,7 +266,7 @@ function execute() {
   if [[ -s "${resp}" ]]; then
     echo -e "## [$(date '+%H:%M')] AI: \n$(cat "${resp}")" >> "${HHS_OLLAMA_HISTORY_FILE}"
     printf '\033[H\033[2J\033[3J'
-    echo -e "✨ ${GREEN}${HHS_OLLAMA_MODEL}:\t${GRAY}${resp}\n${NC}"
+    echo -e "✨ ${GREEN}${ollama_model}:\t${GRAY}${resp}\n${NC}"
     ${HHS_OLLAMA_MD_VIEWER} < "${resp}"
   else
     echo -e "${ERROR_ICN} ${RED}Ollama failed to respond${NC}"

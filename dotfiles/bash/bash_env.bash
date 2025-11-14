@@ -145,7 +145,6 @@ export HHS_VAULT_USER="${USER}"
 # Ollama-AI
 if __hhs_has 'ollama'; then
   export HHS_OLLAMA_HISTORY_FILE="${HHS_OLLAMA_HISTORY_FILE:-${HHS_DIR}/.ollama_history}"
-  export HHS_OLLAMA_MD_VIEWER="${HHS_OLLAMA_MD_VIEWER:-__hhs_md_viewer}"
 fi
 
 # Hunspell
