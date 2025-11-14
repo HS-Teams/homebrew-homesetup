@@ -16,17 +16,12 @@
 install_ollama() {
   if [[ "$(uname -s)" == "Darwin" ]]; then
     brew install ollama || return 2
-    brew services start ollama || return 2
   else
-    curl -fsSL https://ollama.com/install.sh | sh
-    if systemctl enable ollama && systemctl start ollama; then
-      return 0
-    else
-      nohup ollama serve >/var/log/ollama.log 2>&1 &
-      pid=$!
-      kill -0 "$pid" 2>/dev/null || return 2
-    fi
+    curl -fsSL https://ollama.com/install.sh | bash || return 2
   fi
+  nohup ollama serve >/var/log/ollama.log 2>&1 &
+  pid=$!
+  kill -0 "$pid" 2>/dev/null || return 2
 
   return 0
 }

@@ -186,7 +186,6 @@ function select_ollama_model() {
     fi
   fi
 
-  export HHS_OLLAMA_MODEL="${model_name}"
   echo -e "${GREEN}Ollama model set to '${model_name}'.${NC}"
   quit 0
 }
@@ -202,9 +201,9 @@ function execute() {
   [[ "$1" == "-c" || "$1" == "--context" ]] && show_context
   [[ "$1" == "-r" || "$1" == "--reset" ]] && clear_context
   [[ "$1" == "-m" || "$1" == "--models" ]] && show_models
-  [[ "$1" == "-s" || "$1" == "--select-model" ]] && select_ollama_model
+  [[ "$1" == "-s" || "$1" == "--select-model" ]] && shift && select_ollama_model "$@"
 
-  if [[ "${HHS_USE_OFFLINE_AI}" -ne 1 ]] && ! __hhs_has ollama; then
+  if [[ "${HHS_USE_OFFLINE_AI}" -ne 1 ]] || ! __hhs_has ollama; then
     echo -en "${YELLOW}Offline Ollama-AI is not available. Install it [y]/n? ${NC}"
     read -r -n 1 ans
     echo
@@ -261,7 +260,7 @@ function execute() {
   echo -e "✨ ${GREEN}${HHS_OLLAMA_MODEL}:\n${NC}"
   $viewer "${resp}"
 
-  #Cleanup
+  # Cleanup
   [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
   [[ ${ret_val} -eq 0 ]] && quit 0
 

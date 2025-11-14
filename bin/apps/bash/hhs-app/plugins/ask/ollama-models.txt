@@ -1,16 +1,112 @@
-phi3:mini:~2.2 GB
-phi3:medium:~7.9 GB
-qwen:0.5b:~0.4–0.6 GB
-qwen:1.8b:~1–2 GB
-qwen:4b:~2–3 GB
-qwen:7b:~4–5 GB
-qwen:14b:~8–10 GB
-qwen2.5:7b:~4–5 GB
-qwen2.5-coder:7b:~4–5 GB
-qwen3:8b:~4–5 GB
-mistral:7b:~4.1 GB
-llama3:8b:~4–5 GB
-llama3:70b:~43 GB
-gemma2:2b:~1.6 GB
-gemma2:9b:~5–6 GB
-gemma2:27b:~16 GB
+aya-expanse:32b:20GB
+aya-expanse:latest:5.1GB
+codegemma:2b:1.6GB
+codegemma:latest:5.0GB
+codellama:13b:7.4GB
+codellama:34b:19GB
+codellama:70b:39GB
+codellama:latest:3.8GB
+command-r:latest:19GB
+deepseek-coder-v2:236b:133GB
+deepseek-coder-v2:latest:8.9GB
+deepseek-r1:1.5b:1.1GB
+deepseek-r1:70b:43GB
+deepseek-r1:latest:5.2GB
+deepseek-v3.1:latest:404GB
+embeddinggemma:latest:622MB
+falcon3:10b:6.3GB
+falcon3:1b:1.8GB
+falcon3:latest:4.6GB
+falcon:180b:101GB
+falcon:40b:24GB
+falcon:latest:4.2GB
+gemma2:27b:16GB
+gemma2:2b:1.6GB
+gemma2:latest:5.4GB
+gemma3:12b:8.1GB
+gemma3:1b:815MB
+gemma3:270m:292MB
+gemma3:27b:17GB
+gemma3:latest:3.3GB
+gemma:2b:1.7GB
+gemma:latest:5.0GB
+glm-4.6:cloud:-
+gpt-oss:120b:65GB
+gpt-oss:latest:14GB
+llama2-uncensored:latest:3.8GB
+llama2:13b:7.4GB
+llama2:70b:39GB
+llama2:latest:3.8GB
+llama3-chatqa:70b:40GB
+llama3-chatqa:latest:4.7GB
+llama3-groq-tool-use:70b:40GB
+llama3-groq-tool-use:latest:4.7GB
+llama3.1:405b:243GB
+llama3.1:70b:43GB
+llama3.1:latest:4.9GB
+llama3.2-vision:90b:55GB
+llama3.2-vision:latest:7.8GB
+llama3.2:1b:1.3GB
+llama3.2:latest:2.0GB
+llama3.3:latest:43GB
+llama3:70b:40GB
+llama3:8b:4.7GB
+llama3:latest:4.7GB
+llava:13b:8.0GB
+llava:34b:20GB
+llava:latest:4.7GB
+minicpm-v:latest:5.5GB
+mistral-large:latest:73GB
+mistral-nemo:latest:7.1GB
+mistral-small:22b:13GB
+mistral-small:latest:14GB
+mistral-small3.1:latest:15GB
+mistral:latest:4.4GB
+mistral:text:4.1GB
+mixtral:8x22b:80GB
+mixtral:latest:26GB
+mxbai-embed-large:latest:670MB
+nomic-embed-text:latest:274MB
+phi3:latest:2.2GB
+phi3:medium:7.9GB
+phi3:mini:2.2GB
+phi4-mini:latest:2.5GB
+phi4:latest:9.1GB
+qwen2-math:1.5b:935MB
+qwen2-math:72b:41GB
+qwen2-math:latest:4.4GB
+qwen2.5-coder:32b:20GB
+qwen2.5-coder:7b:4.7GB
+qwen2.5-coder:latest:4.7GB
+qwen2.5:0.5b:398MB
+qwen2.5:72b:47GB
+qwen2.5:latest:4.7GB
+qwen2.5vl:3b:3.2GB
+qwen2.5vl:72b:49GB
+qwen2.5vl:latest:6.0GB
+qwen3-coder:480b:290GB
+qwen3-coder:latest:19GB
+qwen3-vl:2b:1.9GB
+qwen3-vl:32b:21GB
+qwen3-vl:latest:6.1GB
+qwen3:0.6b:523MB
+qwen3:32b:20GB
+qwen3:4b:2.5GB
+qwen3:latest:5.2GB
+qwen:0.5b:395MB
+qwen:72b:41GB
+qwen:latest:2.3GB
+smollm2:135m:271MB
+smollm2:360m:726MB
+smollm2:latest:1.8GB
+stable-code:latest:1.6GB
+starcoder:15b:9.0GB
+starcoder:1b:726MB
+starcoder:3b:1.8GB
+starcoder:7b:4.3GB
+starcoder:latest:1.8GB
+starcoder2:latest:4.0GB
+tinyllama:latest:638MB
+vicuna:13b:7.4GB
+vicuna:33b:18GB
+vicuna:latest:3.8GB
