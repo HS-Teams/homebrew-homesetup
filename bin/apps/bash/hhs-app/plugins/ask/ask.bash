@@ -206,7 +206,7 @@ function select_ollama_model() {
 
 # @purpose: HHS plugin required function
 function execute() {
-  local args ans query="Hello" resp ret_val kb_size=128 model
+  local args ans query="Hello" resp ret_val kb_size=128 model hint
   declare -a args=()
 
   [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]] && usage 0
@@ -216,9 +216,15 @@ function execute() {
   [[ "$1" == "-m" || "$1" == "--models" ]] && show_models
   [[ "$1" == "-s" || "$1" == "--select-model" ]] && shift && select_ollama_model "$@"
 
-  [[ "${HHS_OLLAMA_AI_AUTOSTART}" -eq 1 ]] || quit 1 "Ollama-AI is not enabled. Enable it and try again (__hhs setup) !"
+  ollama ps&>/dev/null || {
+    if [[ "${HHS_MY_OS}" == "Darwin" ]]; then
+      hint="brew services start ollama"; else hint="nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &"; fi
+    echo -e "${RED}Ollama-AI agent is not running!\n"
+    echo -e "${YELLOW}${TIP_ICON} Tip: Type \"${hint}\"${NC}"
+    quit 1
+  }
 
-  if [[ "${HHS_OLLAMA_AI_AUTOSTART}" -ne 1 ]] || ! __hhs_has ollama; then
+  if ! __hhs_has ollama; then
     echo -en "${YELLOW}Offline Ollama-AI is not available. Install it [y]/n? ${NC}"
     read -r -n 1 ans
     echo

@@ -324,7 +324,7 @@ if [[ ${HHS_LOAD_KEY_BINDINGS} -eq 1 ]]; then
   export HHS_BINDINGS
 fi
 
-# shellcheck disable=2164
+# Restore the last used directory
 if [[ ${HHS_RESTORE_LAST_DIR} -eq 1 && -s "${HHS_DIR}/.last_dirs" ]]; then
   last_dir="$(grep -m 1 . "${HHS_DIR}/.last_dirs")"
   cd "${last_dir}" 2> /dev/null ||
@@ -341,10 +341,23 @@ else
 fi
 
 # Attach atuin to bash if it's enabled
-if [[ ${HHS_USE_ATUIN} -eq 1 ]] && __hhs_has "atuin"; then
+if __hhs_has 'atuin' && [[ ${HHS_USE_ATUIN} -eq 1 ]] && __hhs_has "atuin"; then
   __hhs_log "DEBUG" "Attaching Atuin plug-in"
   if ! eval "$(atuin init bash)" || ! atuin import auto &>/dev/null; then
     __hhs_log "WARN" "Atuin was not enabled !"
+  fi
+fi
+
+# Start the Ollama server if it's enabled
+if __hhs_has 'ollama' && [[ ${HHS_OLLAMA_AI_AUTOSTART} -eq 1 ]]; then
+  __hhs_log "DEBUG" "Starting Ollama server"
+  if ! ollama ps &>/dev/null; then
+    nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &
+    pid=$!
+    kill -0 "$pid" 2>/dev/null || __hhs_log "ERROR" "Unable to start Ollama server!"
+    __hhs_log "INFO" "Ollama server started with PID: ${pid}"
+  else
+    __hhs_log "INFO" "Ollama server is already running with PID: $(pgrep 'ollama')"
   fi
 fi
 
@@ -376,17 +389,17 @@ if [[ -d "${HHS_MOTD_DIR}" ]]; then
   done
 fi
 
+# Bash hooks
+function command_not_found_handle() {
+  __hhs_errcho "bash" "Command not found: \"\033[9m${1}\033[m\""
+  echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1', 'which $1' or ask 'Command not found: \"${1}\"' for help.${NC}"
+  return 127
+}
+
 finished="$(${PYTHON3} -c 'import time; print(int(time.time() * 1000))')"
 diff_time=$((finished - started))
 diff_time_sec=$((diff_time/1000))
 diff_time_ms=$((diff_time-(diff_time_sec*1000)))
-
-# Bash hooks
-function command_not_found_handle() {
-    __hhs_errcho "bash" "Command not found: \"\033[9m${1}\033[m\""
-    echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1', 'which $1' or ask '<your question> for help'.${NC}"
-    return 127
-}
 
 __hhs_log "INFO" "HomeSetup initialization completed in ${diff_time_sec}s ${diff_time_ms}ms" >>"${HHS_LOG_FILE}"
 echo '' >>"${HHS_LOG_FILE}"
