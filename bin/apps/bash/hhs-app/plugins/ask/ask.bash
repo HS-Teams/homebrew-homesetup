@@ -190,6 +190,17 @@ function select_ollama_model() {
   quit 0
 }
 
+# @purpose: Start ollama server, if not running, in background
+function start_ollama() {
+  if ! ollama ps &>/dev/null; then
+    nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &
+    pid=$!
+    kill -0 "$pid" 2>/dev/null || return 2
+  fi
+
+  return 0
+}
+
 # @purpose: HHS plugin required function
 function execute() {
   local args ans query resp viewer='cat' ret_val kb_size=128 model
@@ -241,6 +252,7 @@ function execute() {
   fi
 
   # Question & Answer
+  start_ollama &> /dev/null
   resp="$(mktemp /tmp/hhs-ollama-response.XXXXXX)" || quit 1 "Failed to create temporary file."
   query="${args[*]}"
   grep -q '^### Started:' "${HHS_OLLAMA_HISTORY_FILE}" || echo "### Started: $(date +%F)" >> "${HHS_OLLAMA_HISTORY_FILE}"
@@ -261,6 +273,7 @@ function execute() {
   $viewer "${resp}"
 
   # Cleanup
+  __hhs_process_kill -f ollama &> /dev/null
   [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
   [[ ${ret_val} -eq 0 ]] && quit 0
 

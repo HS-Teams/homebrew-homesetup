@@ -19,9 +19,6 @@ install_ollama() {
   else
     curl -fsSL https://ollama.com/install.sh | bash || return 2
   fi
-  nohup ollama serve >/var/log/ollama.log 2>&1 &
-  pid=$!
-  kill -0 "$pid" 2>/dev/null || return 2
 
   return 0
 }

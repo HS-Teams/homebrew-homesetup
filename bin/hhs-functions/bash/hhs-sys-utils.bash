@@ -158,12 +158,12 @@ function __hhs_process_list() {
         printf "${HHS_HIGHLIGHT_COLOR}%5s\t%5s\t%5s\t%s" "${uid}" "${pid}" "${ppid}" "${cmd}"
         printf '%*.*s' 0 $((40 - ${#cmd})) "${pad}"
         if [[ -n "${pid}" && $kill_flag -eq 1 ]]; then
-          save-cursor-pos
+          tput sc
           if [[ $force -ne 1 ]]; then
             read -r -n 1 -p "${YELLOW} Kill this process y/[n]? " ANS
           fi
           if [[ -n "${force}" || "$ANS" == "y" || "$ANS" == "Y" ]]; then
-            restore-cursor-pos
+            tput rc
             if kill -9 "${pid}" &>/dev/null; then
               echo -en "${GREEN}=> Killed \"${pid}\" with SIGKILL(-9)\033[K"
             else
@@ -210,7 +210,7 @@ function __hhs_process_kill() {
   fi
 
   for nproc in "${@}"; do
-    __hhs_process_list -q -k${force_flag} "${nproc}"
+    __hhs_process_list -q -k ${force_flag} "${nproc}"
     ret_val=$?
     echo -e "\033[3A" # Move up 3 lines to beautify the output
   done
