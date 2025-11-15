@@ -13,7 +13,7 @@
 
 # @function: Highlight words from the piped stream.
 # @param $1 [Req] : The word to highlight.
-# @param $1 [Pip] : The piped input stream.
+# @param $2 [Opt] : The optional filename (uses stdin if omitted).
 # shellcheck disable=SC2120
 function __hhs_highlight() {
 
@@ -215,7 +215,7 @@ fi
 function __hhs_md_viewer() {
   # Glow
   if __hhs_has 'glow'; then
-    glow -w 120 -s "dracula" "${@}"
+    glow -w 120 -s "dark" "${@}"
   elif __hhs_has 'mdless'; then
     mdless "${@}"
   elif __hhs_has 'bat'; then

@@ -17,7 +17,7 @@ VERSION="1.0.0"
 PLUGIN_NAME="ask"
 
 UNSETS=(
-  help version cleanup execute show_context clear_context show_models start_ollama select_ollama_model
+  help version cleanup execute show_context clear_context show_models start_ollama select_ollama_model ensure_ollama
 )
 
 # Usage message
@@ -27,7 +27,7 @@ USAGE="usage: ${APP_NAME} [options] <question>
    / \\   ___| | __
   / _ \\ / __| |/ /
  / ___ \\__ \\   <
-/_/   \\_\\___/_|\\_\\...Ollama-AI
+/_/   \\_\\___/_|\\_\\...Ollama
 
   Offline ollama-AI agent integration for HomeSetup v${VERSION}.
 
@@ -38,6 +38,7 @@ USAGE="usage: ${APP_NAME} [options] <question>
       -r, --reset                       reset history before executing (fresh new session) and exit
       -m, --models                      list available ollama models and exit
       -s, --select-model [model_name]   select the ollama model to use
+      -k, --keep                        whether to keep the response file after execution
 
     arguments:
       question         the question to ask Ollama
@@ -51,52 +52,44 @@ USAGE="usage: ${APP_NAME} [options] <question>
 [[ "${IS_PIPED}" -eq 1 ]] &&
   read -t 0 < /dev/stdin && CONTEXT="$(cat -)"
 
-# Ollama-AI prompt
+# Ollama prompt
 HHS_OLLAMA_PROMPT="### INSTRUCTIONS ###
-You are an advanced AI assistant integrated into **HomeSetup** (acronym: hhs).
-Your responsibilities include system setup, configuration, diagnostics, and management.
-
-You execute inside a ${HHS_MY_SHELL} shell on **${HHS_MY_OS_RELEASE}**.
-Always prefer macOS-specific commands, falling back to generic POSIX/Linux only when unavoidable.
+You are an advanced AI assistant integrated into HomeSetup (acronym: hhs)
+Your responsibilities include system setup, configuration, diagnostics, and management
+You execute inside a ${HHS_MY_SHELL} shell on ${HHS_MY_OS_RELEASE}
+Always prefer ${HHS_MY_OS}-specific commands, falling back to generic POSIX/Linux only when unavoidable
 
 ### HomeSetup Information ###
-- installation path: ${HHS_HOME}
-- usage docs: ${HHS_HOME}/docs/USAGE.md
-- handbook: ${HHS_HOME}/docs/handbook/handbook.md
-- repository: ${HHS_GITHUB_URL}
+- Installation path: ${HHS_HOME}
+- Usage docs: ${HHS_HOME}/docs/USAGE.md
+- Handbook: ${HHS_HOME}/docs/handbook/handbook.md
+- Repository: ${HHS_GITHUB_URL}
 
 ### SYSTEM RULES ###
 
-1. **The CONTEXT provided with every request is the primary and authoritative source of truth.**
-2. You MUST ALWAYS read and analyze the CONTEXT fully before answering.
-3. Derive the answer strictly from the CONTEXT when possible.
-4. Only when the CONTEXT does not contain the required information, you may fall back to your internal knowledge.
-5. NEVER contradict or ignore the CONTEXT.
-6. Before answering, silently follow this reasoning flow:
-   a) Read the entire CONTEXT.
-   b) Extract all relevant data.
-   c) Check if the question can be answered only from the CONTEXT.
-   d) If YES → answer using ONLY the CONTEXT.
-   e) If NO → answer briefly using internal knowledge.
-7. When providing terminal commands:
+1. You MUST ALWAYS read and analyze the CONTEXT fully before answering, from the most recent to the oldest entries
+3. Only when the CONTEXT does not contain the required information, ignore it and rely on your internal knowledge
+4. When providing terminal commands:
    - keep them minimal
    - no unnecessary flags
-   - add at most a one-line explanation
-8. Keep all answers short, direct, and technically accurate.
-9. Avoid any unnecessary explanations, filler, or narrative text.
-10. Do NOT guess. If uncertain, respond exactly: **\"Sorry, but I don't know.\"**
-11. Maintain a professional, neutral tone.
-12. Personal or unrelated questions: answer briefly and without bias.
+   - add at most a one-line explanation when possible
+5. Keep all answers short, direct, and technically accurate
+6. Avoid any unnecessary explanations, filler, or narrative text
+7. Do NOT guess. If uncertain, respond exactly: **\"Sorry, but I don't know.\"**
+8. When the user provides a personal or generic queries: answer politely, briefly, and without bias
 
 ### TASK ###
-Answer the user’s question accurately and as briefly as possible.
+Answer the user’s question accurately and always be helpful. Provide continuation questions when applicable.
 "
 
+# Keep response file after execution flag
+KEEP=
+
 # Ollama model to use
-ollama_model=$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")
-ollama_model="${ollama_model#*=}"
-ollama_model="${ollama_model//\"/}"
-ollama_model="${ollama_model//\'/}"
+OLLAMA_MODEL=$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")
+OLLAMA_MODEL="${OLLAMA_MODEL#*=}"
+OLLAMA_MODEL="${OLLAMA_MODEL//\"/}"
+OLLAMA_MODEL="${OLLAMA_MODEL//\'/}"
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 
@@ -117,9 +110,32 @@ function cleanup() {
   echo -n ''
 }
 
+# @purpose: Check if ollama is installed and offer installation if not
+function ensure_ollama() {
+  if ! __hhs_has ollama; then
+    echo -en "${YELLOW}Offline Ollama is not available. Install it [y]/n? ${NC}"
+    read -r -n 1 ans
+    echo ''
+    if [[ "$ans" =~ ^[yY]$ || -z "$ans" ]]; then
+      echo -en "${BLUE}Installing Ollama... "
+      if "${HHS_HOME}/bin/apps/bash/hhs-app/plugins/ask/install-ollama.bash"; then
+        echo -e "${GREEN}OK${NC}\n"
+        echo -e "${YELLOW}${TIP_ICON} Tip: Type \"__hhs ask execute 'what can you do for me?'\"${NC}\n"
+        start_ollama &> /dev/null
+      else
+        echo -e "${RED}FAILED${NC}"
+        quit 1 "Offline Ollama failed to install."
+      fi
+    else
+      quit 1 "Offline Ollama is required to use this feature."
+    fi
+  fi
+}
+
 # @purpose: Start ollama server, if not running, in background
 function start_ollama() {
   if ! ollama ps &>/dev/null; then
+    echo -e "${BLUE}✨ Starting Ollama agent...${NC}"
     nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &
     pid=$!
     kill -0 "$pid" 2>/dev/null || return 2
@@ -131,6 +147,7 @@ function start_ollama() {
 # @purpose: Show ollama history file contents (context)
 function show_context() {
   if [[ -f "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
+    [[ -s "${HHS_OLLAMA_HISTORY_FILE}" ]] || quit 0 "${ORANGE}✨ Ollama history file is empty${NC}"
     ${HHS_OLLAMA_MD_VIEWER} < "${HHS_OLLAMA_HISTORY_FILE}"
     quit 0
   fi
@@ -140,13 +157,12 @@ function show_context() {
 
 # @purpose: Clear ollama history file (context)
 function clear_context() {
-  if [[ -s "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
+  if [[ -f "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
     : > "${HHS_OLLAMA_HISTORY_FILE}" || quit 2 "Unable to clear ollama history file"
-    echo -e "${GREEN}Ollama history cleared${NC}"
-    quit 0
+    quit 0 "${GREEN}✨ Ollama history cleared${NC}"
   fi
 
-  quit 1 "${RED}Ollama history file not found or empty${NC}"
+  quit 0 "${ORANGE}✨ Ollama history file not found${NC}"
 }
 
 # @purpose: Show available ollama models (local and for download)
@@ -157,7 +173,7 @@ function show_models() {
     echo -e "${BLUE}Available locally:\n${WHITE}"
     IFS=$'\n'
     for m in $(ollama list | nl); do
-      [[ "${m}" =~ .*${ollama_model}.* ]] && echo -e "${HHS_HIGHLIGHT_COLOR}${m}\t (current)${NC}" && continue
+      [[ "${m}" =~ .*${OLLAMA_MODEL}.* ]] && echo -e "${HHS_HIGHLIGHT_COLOR}${m}\t (current)${NC}" && continue
       echo -e "${m}"
     done
     IFS="$OLDIFS"
@@ -177,11 +193,11 @@ function select_ollama_model() {
     # All models
     while IFS= read -r model; do
       model_name=$(printf "%s" "$model" | cut -d':' -f1-2)
-      [[ $model == *"${ollama_model}"* ]] && model="${GREEN}${model}${NC}"
+      [[ $model == "${OLLAMA_MODEL}"* ]] && model="${GREEN}${model}${NC}"
       [[ " ${available[*]} " == *" ${model_name} "* ]] || model="${GRAY}${model}${NC}"
       all_models+=("${model}")
     done < <(grep . "$HHS_HOME/bin/apps/bash/hhs-app/plugins/ask/ollama-models.txt")
-    title="${BLUE}Select the Ask Ollama model${NC}"
+    title="${BLUE}Select the Ask ✨ Ollama model${NC}"
     mchoose_file=$(mktemp)
     if __hhs_mselect "${mchoose_file}" "${title}" "${all_models[@]}"; then
       model_name=$(cut -d':' -f1-2 <<< "$(grep . "${mchoose_file}")")
@@ -200,79 +216,93 @@ function select_ollama_model() {
     fi
   fi
 
-  echo -e "${GREEN}Ollama model set to '${model_name}'.${NC}"
-  quit 0
+  quit 0 "${GREEN}✨ Ollama model set to '${model_name}'.${NC}"
+}
+
+# @purpose: Get context window size for the selected ollama model
+function get_context_window() {
+  ctx="$(
+    awk -F'|' -v p="${OLLAMA_MODEL}" '
+    $0 ~ p {
+      col=$6
+      gsub(/[[:space:]]/, "", col)
+      sub(/[A-Za-z]+$/, "", col)
+      print col
+      exit
+    }' <<<"$(< "${HHS_HOME}"/bin/apps/bash/hhs-app/plugins/ask/ollama-models.md)"
+  )"
+  printf "%d:%d" "${ctx}" "$(printf "%s" "(${ctx} * 0.6)/1" | bc)"
+}
+
+# Ensure history file size limit fits within context window
+function ensure_context_size() {
+  local size kb_size="${1}"
+
+  HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((kb_size * 1024))
+  if [[ -s "${HHS_OLLAMA_HISTORY_FILE}" ]]; then
+    size=$(stat -c %s "${HHS_OLLAMA_HISTORY_FILE}" 2>/dev/null || wc -c < "${HHS_OLLAMA_HISTORY_FILE}")
+    if [[ "${size}" -gt "${HHS_OLLAMA_MAX_HIST_FILE_SIZE}" ]]; then
+      tail -c "${HHS_OLLAMA_MAX_HIST_FILE_SIZE}" "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
+      mv "${HHS_OLLAMA_HISTORY_FILE}.tmp" "${HHS_OLLAMA_HISTORY_FILE}"
+    fi
+  fi
 }
 
 # @purpose: HHS plugin required function
 function execute() {
-  local args ans query="Hello" resp ret_val kb_size=128 model hint
+  local args ans query resp ret_val ctx kb_size ctx_window model hint
   declare -a args=()
 
-  [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]] && usage 0
-  [[ "$1" == "-v" || "$1" == "--version" ]] && version
-  [[ "$1" == "-c" || "$1" == "--context" ]] && show_context
-  [[ "$1" == "-r" || "$1" == "--reset" ]] && clear_context
-  [[ "$1" == "-m" || "$1" == "--models" ]] && show_models
-  [[ "$1" == "-s" || "$1" == "--select-model" ]] && shift && select_ollama_model "$@"
+  ctx_window=$(get_context_window)
+  ctx=${ctx_window%%:*}
+  kb_size=${ctx_window#*:}
 
+  ensure_context_size "${kb_size}"
+
+  [[ "$#" -eq 0 ]] && quit 1 "No question provided."
+
+  case "$1" in
+    -h|--help) usage 0 ;;
+    -v|--version) version ;;
+    -c|--context) show_context ;;
+    -r|--reset) clear_context ;;
+    -m|--models) show_models ;;
+    -s|--select-model) shift; select_ollama_model "$@";;
+    -k|--keep) KEEP=1 ;;
+  esac
+
+  ensure_ollama
+
+  # Check if ollama server is running
   ollama ps&>/dev/null || {
     if [[ "${HHS_MY_OS}" == "Darwin" ]]; then
       hint="brew services start ollama"; else hint="nohup ollama serve >"${HHS_LOG_DIR}/ollama.log" 2>&1 &"; fi
-    echo -e "${RED}Ollama-AI agent is not running!\n"
+    echo -e "${RED}Ollama service is not running!\n"
     echo -e "${YELLOW}${TIP_ICON} Tip: Type \"${hint}\"${NC}"
     quit 1
   }
 
-  if ! __hhs_has ollama; then
-    echo -en "${YELLOW}Offline Ollama-AI is not available. Install it [y]/n? ${NC}"
-    read -r -n 1 ans
-    echo
-    if [[ "$ans" =~ ^[yY]$ || -z "$ans" ]]; then
-      echo -en "${BLUE}Installing HomeSetup offline model... "
-      if "${HHS_HOME}/bin/apps/bash/hhs-app/plugins/ask/install-ollama.bash"; then
-        echo -e "${GREEN}OK${NC}\n"
-        echo -e "${YELLOW}${TIP_ICON} Tip: Type \"__hhs ask execute 'what can you do for me?'\"${NC}\n"
-        quit 0
-      else
-        echo -e "${RED}FAILED${NC}"
-        quit 1 "Offline Ollama-AI failed to install."
-      fi
-    else
-      quit 1 "Offline Ollama-AI is required to use this feature."
-    fi
-  fi
-
+  # Prepare question from arguments
   for arg in "$@"; do [[ ! "$arg" =~ ^-[a-zA-Z] ]] && args+=("$arg"); done
-
-  query="${args[*]}";
-
-  HHS_OLLAMA_MAX_HIST_FILE_SIZE=$((kb_size * 1024))
-  if [ -f "$HHS_OLLAMA_HISTORY_FILE" ]; then
-    size=$(stat -c %s "$HHS_OLLAMA_HISTORY_FILE" 2>/dev/null || wc -c < "$HHS_OLLAMA_HISTORY_FILE")
-    if [ "$size" -gt "$HHS_OLLAMA_MAX_HIST_FILE_SIZE" ]; then
-      tail -c "${kb_size}K" "${HHS_OLLAMA_HISTORY_FILE}" > "${HHS_OLLAMA_HISTORY_FILE}.tmp"
-      mv "${HHS_OLLAMA_HISTORY_FILE}.tmp" "${HHS_OLLAMA_HISTORY_FILE}"
-    fi
-  fi
+  query="${args[*]}"
 
   # Question & Answer
   start_ollama &> /dev/null
-  resp="$(mktemp /tmp/hhs-ollama-response.XXXXXX)" || quit 1 "Failed to create temporary file."
+  resp="$(mktemp /tmp/hhs-"${OLLAMA_MODEL}"-response.XXXXXX)" || quit 1 "Failed to create temporary file."
   grep -q '^### Started:' "${HHS_OLLAMA_HISTORY_FILE}" || echo "### Started: $(date +%F)" >> "${HHS_OLLAMA_HISTORY_FILE}"
   echo -e "## [$(date '+%H:%M')] User: \n${query}" >> "${HHS_OLLAMA_HISTORY_FILE}"
-  echo -e "✨ ${GREEN}${ollama_model}:\n${NC}"
+  echo -e "✨ ${GREEN}${OLLAMA_MODEL}[${ctx}K]:\n"
   printf '%s### CONTEXT ###\n%s\n\n### USER INPUT ###\n\n%s\n' \
     "$HHS_OLLAMA_PROMPT" "$CONTEXT" "${query}" |
-    ollama run "${ollama_model}" |
-    tee -a "$resp"
+    ollama run "${OLLAMA_MODEL}" |
+    tee -a "${resp}"
   ret_val=${PIPESTATUS[1]}
 
   # Display the response
   if [[ -s "${resp}" ]]; then
     echo -e "## [$(date '+%H:%M')] AI: \n$(cat "${resp}")" >> "${HHS_OLLAMA_HISTORY_FILE}"
     printf '\033[H\033[2J\033[3J'
-    echo -e "✨ ${GREEN}${ollama_model}:\t${GRAY}${resp}\n${NC}"
+    echo -e "✨ ${GREEN}${OLLAMA_MODEL}[${ctx}K]:\t${GRAY}${resp}\n${NC}"
     ${HHS_OLLAMA_MD_VIEWER} < "${resp}"
   else
     echo -e "${ERROR_ICN} ${RED}Ollama failed to respond${NC}"
@@ -280,7 +310,7 @@ function execute() {
   fi
 
   # Cleanup
-  [[ -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
+  [[ -z "${KEEP}" && -f "${resp}" ]] && rm -f "${resp}" &> /dev/null
 
   quit "${ret_val}"
 }
