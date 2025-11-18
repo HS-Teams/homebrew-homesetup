@@ -44,16 +44,12 @@ function sponsor() {
   quit 1 "Failed to open url: \"${page_url}\" !"
 }
 
-# @purpose: Open a docsify version of the HomeSetup README.
-function docsify() {
+# @purpose: Open GitHub docs of the HomeSetup.
+function docs() {
 
-  local docsify_url page_url github_url
+  local page_url='https://hs-teams.github.io/homesetup/'
 
-  docsify_url='https://docsify-this.net/?basePath='
-  github_url="${HHS_GITHUB_URL//github/raw.githubusercontent}/master&sidebar=true"
-  page_url="${docsify_url}${github_url}"
-
-  echo -e "${BLUE}${GLOBE_ICN} Opening HomeSetup docsify README from: ${page_url}${ELLIPSIS_ICN}${NC}"
+  echo -e "${BLUE}${GLOBE_ICN} Opening HomeSetup docs from: ${page_url}${ELLIPSIS_ICN}${NC}"
   __hhs_open "${page_url}" && sleep 2 && quit 0
 
   quit 1 "Failed to open url: \"${page_url}\" !"

@@ -1,0 +1,37 @@
+site_name: HomeSetup
+site_url: https://HS-Teams.github.io/homesetup
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+  features:
+    - navigation.expand
+    - navigation.sections
+    - navigation.instant
+    - navigation.top
+    - content.code.copy
+
+repo_url: https://github.com/HS-Teams/homesetup
+repo_name: HS-Teams/homesetup
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - toc:
+      permalink: true
+  - tables
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.emoji
+  - pymdownx.mark
+
+nav:
+  - Home: README.md
+  - Handbook: docs/handbook/handbook.md
+  - Handbook-Pages:
+    - Applications: docs/handbook/pages/applications.md
+    - Functions: docs/handbook/pages/functions.md
+  - Showcase: docs/SHOWCASE.md
+  - Usage: docs/USAGE.md
