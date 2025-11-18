@@ -1,4 +1,4 @@
-<img src="https://iili.io/HvtxC1S.png" width="64" height="64" align="right" />
+<img src="https://iili.io/HvtxC1S.png" width="64" height="64" align="right" alt="hhs-logo"/>
 
 # HomeSetup
 
@@ -11,7 +11,7 @@
 [![Donate](https://img.shields.io/badge/PayPal-Donate-yellow?logo=paypal&logoColor=white)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=J5CDEFLF6M3H4)
 [![Build](https://github.com/yorevs/homesetup/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/yorevs/homesetup/actions/workflows/build-and-test.yml)
 
-<img src="https://iili.io/JinJpTu.png" width="100%" height="100%" />
+<img src="https://iili.io/JinJpTu.png" width="100%" height="100%" alt="hhs-cover"/>
 
 ---
 
@@ -23,14 +23,14 @@ With **HomeSetup**, you can enhance your terminal experience, boost productivity
 
 > **THIS IS NOT JUST A DOTFILES FRAMEWORK**
 
-<img src="https://iili.io/dbXcC6g.gif">
+<img src="https://iili.io/dbXcC6g.gif" alt="hhs-showcase"/>
 
 - See the [Showcase](docs/SHOWCASE.md) page to see some HomeSetup demos.
 - For the full documentation, access the [HomeSetup usage manual](docs/USAGE.md).
 
 **🔥 HOT** AI is here ! **HomeSetup** has integrated AI with RAG capabilities.
 
-<img src="https://iili.io/dy2Ga6u.gif">
+<img src="https://iili.io/dy2Ga6u.gif" alt="hhs-ai-demo" />
 
 ## Key Features
 
@@ -151,7 +151,7 @@ When your terminal is set, then you should see something like this:
 
 ### Try-it first
 
-<img src="https://iili.io/dydwcjR.gif">
+<img src="https://iili.io/dydwcjR.gif" alt="hhs-try-first" />
 
 Running HomeSetup in a Docker container offers a convenient and isolated environment for testing purposes, ensuring
 that your machine remains unaffected during the evaluation process. Use one of the following docker images:
@@ -218,19 +218,19 @@ Your existing dotfiles (such as .bashrc, .bash_profile, etc.) will be backed up 
 
 Once the installation is completed successfully, you should see the following welcome message:
 
-<img src="https://iili.io/24Lgi1s.jpg">
+<img src="https://iili.io/24Lgi1s.jpg" alt="hhs-welcome" />
 
 ### Firebase setup
 
 HomeSetup provides the capability to utilize your Firebase account for uploading and downloading your custom files (dotfiles file synchronization) to your _Real-time Database_. To utilize this feature, you must first configure your Google Firebase account. Please check the [Firebase Setup](docs/FIREBASE_SETUP.md) document for instructions.
 
-<img src="https://iili.io/dbXM29a.gif">
+<img src="https://iili.io/dbXM29a.gif" alt="hhs-firebase-setup">
 
 ### Starship Setup
 
 HomeSetup, now, bundles starship prompt. It's has an out-of-the-box configuration. For a full list of features and configurations please checkout the [Starship](https://starship.rs/) website. Please check the [Starship Plugin](docs/handbook/pages/applications/bash/hhs-app/plugins/starship.md) document for mode details about HomeSetup / Starship integration.
 
-<img src="https://iili.io/24QCWuf.gif">
+<img src="https://iili.io/24QCWuf.gif" alt="hhs-starship-setup">
 
 ### Other integrations
 
@@ -269,7 +269,7 @@ HomeSetup integrates [Delta](https://github.com/dandavison/delta), a syntax-high
 
 To enable it for your git installation, add the following to your `~/.gitconfig`:
 
-```ini
+```toml
 [core]
   pager = delta
 
@@ -347,7 +347,7 @@ You can also sponsor it by using our [GitHub Sponsors](https://github.com/sponso
 This project is already supported by:
 
 <a href="https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support">
-  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="120" height="120">
+  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="120" height="120" alt="jetbrains">
 </a>
 
 Thank you <3 !!

@@ -1,6 +1,8 @@
 site_name: HomeSetup
 site_url: https://HS-Teams.github.io/homesetup
 
+docs_dir: docs
+
 theme:
   name: material
   palette:
@@ -28,10 +30,24 @@ markdown_extensions:
   - pymdownx.mark
 
 nav:
-  - Home: README.md
-  - Handbook: docs/handbook/handbook.md
-  - Handbook-Pages:
-    - Applications: docs/handbook/pages/applications.md
-    - Functions: docs/handbook/pages/functions.md
-  - Showcase: docs/SHOWCASE.md
-  - Usage: docs/USAGE.md
+  - Home: 'index.md'
+  - Handbook:
+    - Overview: 'handbook/handbook.md'
+    - Pages:
+      - Applications Overview: 'handbook/pages/applications.md'
+      - Functions Overview: 'handbook/pages/functions.md'
+      - Applications: # Start of the nested folder content
+        - hhs-app: 'handbook/pages/applications/bash/hhs-app/hhs-app.md'
+        - check-ip: 'handbook/pages/applications/bash/check-ip.md'
+        - fetch: 'handbook/pages/applications/bash/fetch.md'
+      - Functions: # Start of the nested folder content
+        - dev-tools: 'handbook/pages/functions/dev-tools/docker-tools.md'
+        - std-tools: 'handbook/pages/functions/std-tools/aliases-related.md'
+  - Misc:
+    - CHANGELOG: 'CHANGELOG.md'
+    - Code of Conduct: 'CODE_OF_CONDUCT.md'
+    - Color LS Setup: 'COLOR_LS_SETUP.md'
+    - Contributing: 'CONTRIBUTING.md'
+    - Firebase Setup: 'FIREBASE_SETUP.md'
+    - Showcase: 'SHOWCASE.md'
+    - Usage: 'USAGE.md'
