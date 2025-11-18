@@ -4,11 +4,11 @@
 
 > The ultimate Terminal experience
 
-[![Terminal](https://badgen.net/badge/icon/terminal?icon=terminal&label)](https://github.com/yorevs/homesetup)
-[![License](https://badgen.net/badge/license/MIT/gray)](LICENSE.md)
-[![Release](https://badgen.net/badge/release/v1.9.4/gray)](docs/CHANGELOG.md#unreleased)
-[![Gitter](https://badgen.net/badge/icon/gitter?icon=gitter&label)](https://gitter.im/yorevs-homesetup/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Donate](https://badgen.net/badge/paypal/donate/yellow)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=J5CDEFLF6M3H4)
+[![Terminal](https://img.shields.io/badge/Terminal-black?logo=gnometerminal&logoColor=white)](https://github.com/yorevs/homesetup)
+[![License](https://img.shields.io/badge/License-MIT-gray)](LICENSE.md)
+[![Release](https://img.shields.io/badge/Release-v1.9.4-gray)](docs/CHANGELOG.md#unreleased)
+[![Gitter](https://img.shields.io/badge/Gitter-Join%20Chat-brightgreen?logo=gitter)](https://gitter.im/yorevs-homesetup/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Donate](https://img.shields.io/badge/PayPal-Donate-yellow?logo=paypal&logoColor=white)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=J5CDEFLF6M3H4)
 [![Build](https://github.com/yorevs/homesetup/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/yorevs/homesetup/actions/workflows/build-and-test.yml)
 
 <img src="https://iili.io/JinJpTu.png" width="100%" height="100%" />

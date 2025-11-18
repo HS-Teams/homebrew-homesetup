@@ -114,12 +114,12 @@ function tests() {
     echo -e "${NC}"
     awk '{printf "\033[33;1m%4d\033[m  %s\n", NR, $0}' "${log_file}"
     echo ''
-    curl 'https://badgen.net/badge/tests/failed/red' --output "${badge}" 2> /dev/null
+    curl 'https://img.shields.io/badge/tests-failed-red' --output "${badge}" 2> /dev/null
     echo -e " ${RED}${FAIL_ICN}${WHITE}  Bats tests ${RED}FAILED${WHITE} in ${diff_time_sec}s ${diff_time_ms}ms ${NC}"
     quit 2
   else
     echo ''
-    curl 'https://badgen.net/badge/tests/passed/green' --output "${badge}" 2> /dev/null
+    curl 'https://img.shields.io/badge/tests-passed-green' --output "${badge}" 2> /dev/null
     echo -e " ${GREEN}${PASS_ICN}${NC}  ${WHITE}All Bats tests ${GREEN}PASSED${WHITE} in ${diff_time_sec}s ${diff_time_ms}ms ${NC}"
     quit 0
   fi
