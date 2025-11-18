@@ -21,7 +21,7 @@ UNSETS=(
 )
 
 # Usage message
-USAGE="usage: ${APP_NAME} [options] <question>
+USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [options] <question>
 
     _        _
    / \\   ___| | __
@@ -86,7 +86,7 @@ Answer the user’s question accurately and always be helpful. Provide continuat
 KEEP=
 
 # Ollama model to use
-OLLAMA_MODEL=$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")
+OLLAMA_MODEL="$(__hhs_toml_get "${HHS_SETUP_FILE}" "hhs_ollama_model" "ollama")"
 OLLAMA_MODEL="${OLLAMA_MODEL#*=}"
 OLLAMA_MODEL="${OLLAMA_MODEL//\"/}"
 OLLAMA_MODEL="${OLLAMA_MODEL//\'/}"
@@ -188,7 +188,7 @@ function select_ollama_model() {
   declare -a all_models=() available=()
 
   if [[ -z "${model_name}" ]]; then
-    # Available models
+    # Pulled models
     while IFS= read -r line; do available+=( "$line" ); done < <(ollama list | tail -n +2 | awk '{print $1}')
     # All models
     while IFS= read -r model; do
@@ -259,7 +259,7 @@ function execute() {
 
   ensure_context_size "${kb_size}"
 
-  [[ "$#" -eq 0 ]] && quit 1 "No question provided."
+  [[ "$#" -eq 0 ]] && usage 1 "No question provided."
 
   case "$1" in
     -h|--help) usage 0 ;;

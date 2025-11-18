@@ -53,6 +53,7 @@ if tput setaf 1 &> /dev/null; then
   WHITE=$(tput setaf 15)
   YELLOW=$(tput setaf 136)
   VIOLET=$(tput setaf 125)
+  STRIKE=
   __hhs_log "DEBUG" "Bash colors loaded using 'tput'"
 else
   # VT100 ANSI colors, taken from https://misc.flogisoft.com/bash/tip_colors_and_formatting
@@ -60,14 +61,15 @@ else
   export BLACK='\033[0;30m'
   export RED='\033[0;31m'
   export GREEN='\033[0;32m'
-  export ORANGE='\033[38;5;202m'
   export BLUE='\033[0;34m'
   export PURPLE='\033[0;35m'
   export CYAN='\033[0;36m'
+  export ORANGE='\033[38;5;202m'
   export GRAY='\033[38;5;8m'
   export WHITE='\033[0;97m'
   export YELLOW='\033[0;93m'
   export VIOLET='\033[0;95m'
+  export STRIKE='\033[9m'
   __hhs_log "DEBUG" "Bash colors loaded using 'Esc['"
 fi
 

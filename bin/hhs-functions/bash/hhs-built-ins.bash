@@ -132,16 +132,16 @@ function __hhs_about() {
   return 0
 }
 
-# @function: Display all alias definitions using filter.
-# @param $1 [Opt] : If -e is present, edit the .aliasdef file, otherwise a case-insensitive filter to be used when listing.
+# @function: Display all alias definitions using filters.
+# @param $1 [Opt] : If -e is present, edit the .aliasdef file, otherwise a case-insensitive filters to be used when listing.
 function __hhs_defs() {
 
-  local pad pad_len filter name value columns ret_val=0 next
+  local pad pad_len filters name value columns ret_val=0 next
 
   HHS_ALIASDEF_FILE="${HHS_DIR}/.aliasdef"
 
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "usage: ${FUNCNAME[0]} [regex_filters]"
+    echo "usage: ${FUNCNAME[0]} [regex_filterss]"
     return 1
   else
     if [[ "$1" == '-e' ]]; then
@@ -151,17 +151,17 @@ function __hhs_defs() {
       pad=$(printf '%0.1s' "."{1..30})
       pad_len=26
       columns="$(($(tput cols) - pad_len - 10))"
-      filter="$*"
-      filter=${filter// /\|}
-      [[ -z "${filter}" ]] && filter=".*"
-      echo -e "\n${YELLOW}Listing all alias definitions matching [${filter}]:\n"
+      filters="$*"
+      filters=${filters// /\|}
+      [[ -z "${filters}" ]] && filters=".*"
+      echo -e "\n${YELLOW}Listing all alias definitions matching [${filters}]:\n"
       IFS=$'\n'
       for next in $(grep -i '^ *__hhs_alias' "${HHS_ALIASDEF_FILE}" | sed 's/^ *//g' | sort | uniq); do
         name=${next%%=*}
         name="$(trim <<< "${name}" | awk '{print $2}')"
         value=${next#*=}
         value=${value//[\'\"]/}
-        if [[ ${name} =~ ${filter} ]]; then
+        if [[ ${name} =~ ${filters} ]]; then
           echo -en "${HHS_HIGHLIGHT_COLOR}${name//__hhs_alias/}${NC} "
           printf '%*.*s' 0 $((pad_len - ${#name})) "${pad}"
           echo -en "${GREEN} defined as  ${NC}"
@@ -178,57 +178,76 @@ function __hhs_defs() {
   return ${ret_val}
 }
 
-# @function: Display all environment variables using filter.
-# @param $1 [Opt] : If -e is present, edit the env file, otherwise a case-insensitive filter to be used when listing.
+# @function: Display all environment variables using filters.
+# @param $1 [Opt] : If -e is present, edit the env file, otherwise a case-insensitive filters to be used when listing.
+# @function: Display all environment variables using filters.
+# @param $1 [Opt] : If -e is present, edit the env file.
+# @param $* [Opt] : Filter string(s). Use -r to reveal secret values.
 function __hhs_envs() {
 
-  local pad pad_len filter name value ret_val=0 columns col_offset=8 env_var
+  local pad pad_len filters name value ret_val=0 columns col_offset=8 env_var
+  local reveal_secrets=false
 
   HHS_ENV_FILE=${HHS_ENV_FILE:-$HHS_DIR/.env}
-
   touch "${HHS_ENV_FILE}"
 
+  # Help option
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "usage: ${FUNCNAME[0]} [options] [regex_filters]"
     echo ''
     echo '    Options: '
-    echo '      -e : Edit current HHS_ENV_FILE.'
+    echo '      -e            Edit current HHS_ENV_FILE.'
+    echo '      -r, --reveal  Show secret values (not masked).'
+    echo '      -h, --help    Show this help message.'
     return 1
-  else
-    if [[ "$1" == '-e' ]]; then
-      __hhs_edit "${HHS_ENV_FILE}"
-      ret_val=$?
-    else
-      pad=$(printf '%0.1s' "."{1..60})
-      pad_len=40
-      columns="$(($(tput cols) - pad_len - col_offset))"
-      filter="$*"
-      filter=${filter// /\|}
-      [[ -z "${filter}" ]] && filter=".*"
-      echo ' '
-      echo -e "${YELLOW}Listing all exported environment variables matching [ ${filter} ]:${NC}"
-      echo ' '
-      IFS=$'\n'
-      \shopt -s nocasematch
-      for env_var in $(env | sort); do
-        if [[ $env_var =~ ^([a-zA-Z0-9_]+)=(.*) ]]; then
-          name=${BASH_REMATCH[1]}
-          value=${BASH_REMATCH[2]}
-          if [[ ${name} =~ ${filter} ]]; then
-            echo -en "${HHS_HIGHLIGHT_COLOR}${name}${NC} "
-            printf '%*.*s' 0 $((pad_len - ${#name})) "${pad}"
-            echo -en " ${GREEN} ${NC}${value:0:${columns}}"
-            [[ ${#value} -ge ${columns} ]] && echo -n "..."
-            echo -e "${NC}"
-          fi
-        fi
-      done
-      IFS="${OLDIFS}"
-      \shopt -u nocasematch
-      echo ' '
-    fi
   fi
 
+  [[ "$1" == "-e" ]] && { __hhs_edit "${HHS_ENV_FILE}"; return $?; }
+
+  for arg in "$@"; do
+    case "$arg" in
+      -r|--reveal) reveal_secrets=true; shift ;;
+    esac
+  done
+
+  filters="${*}"
+  pad=$(printf '%0.1s' "."{1..60})
+  pad_len=41
+  columns="$(($(tput cols) - pad_len - col_offset))"
+
+  filters="${filters[*]}"
+  filters=${filters// /\|}
+  [[ -z "${filters}" ]] && filters=".*"
+
+  echo ' '
+  echo -e "${YELLOW}Listing all exported environment variables matching [ ${filters} ]:${NC}"
+  echo ' '
+
+  OLDIFS="$IFS"
+  IFS=$'\n'
+  \shopt -s nocasematch
+  env | sort | while IFS= read -r env_var; do
+    if [[ $env_var =~ ^([a-zA-Z0-9_]+)=(.*) ]]; then
+      name=${BASH_REMATCH[1]}
+      value=${BASH_REMATCH[2]}
+      if [[ ${name} =~ ${filters} ]]; then
+        if [[ "$reveal_secrets" != true ]]; then
+          if [[ ${name,,} =~ (secret|token|password|passwd|pass|pwd|api_key|apikey|credential|creds) ]]; then
+            value="********"
+          fi
+        fi
+        echo -en "${HHS_HIGHLIGHT_COLOR}${name}${NC} "
+        printf '%*.*s' 0 $((pad_len - ${#name})) "${pad}"
+        echo -en " ${GREEN} ${NC}${value:0:${columns}}"
+        [[ ${#value} -ge ${columns} && ${value} != "********" ]] && echo -n "..."
+        echo -e "${NC}"
+      fi
+    fi
+  done
+  \shopt -u nocasematch
+  IFS="${OLDIFS}"
+
+  echo ' '
   return ${ret_val}
 }
 

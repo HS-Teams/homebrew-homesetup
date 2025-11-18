@@ -217,7 +217,7 @@ function invoke_plugin() {
 
   local plg_cmd="${1}" ret
 
-  has_plugin "${plg_cmd}" || command_hint "Plugin/Function/Command not found: \"\033[9m${plg_cmd}\033[m\"" "${@}"
+  has_plugin "${plg_cmd}" || command_hint "Plugin/Function/Command not found: \"${STRIKE}${plg_cmd}${NC}\"" "${@}"
   shift
 
   for idx in "${!PLUGINS[@]}"; do
@@ -225,7 +225,7 @@ function invoke_plugin() {
       [[ -s "${PLUGINS_LIST[idx]}" ]] || quit 1
       source "${PLUGINS_LIST[idx]}"
       plg_cmd="${1:-execute}"
-      has_command "${plg_cmd}" || command_hint  "Command not available: ${plg_cmd}" "${@}"
+      has_command "${plg_cmd}" || command_hint  "Command not available: \"${STRIKE}${plg_cmd}${NC}\"" "${@}"
       shift
       ${plg_cmd} "${@}"  # Execute the specified plugin
       ret=${?}
@@ -237,7 +237,7 @@ function invoke_plugin() {
   done
 
   ret=${?}
-  [[ ${ret} -eq 255 ]] && command_hint "Plugin/Function/Command not found: \"\033[9m${plg_cmd}\033[m\"" "${@}"
+  [[ ${ret} -eq 255 ]] && command_hint "Plugin/Function/Command not found: \"${STRIKE}${plg_cmd}${NC}\"" "${@}"
 
   return ${ret}
 }
@@ -338,7 +338,7 @@ function display_list() {
     max_width=$(printf "%s\n" "${items[@]}" | awk '{ if (length > max) max = length } END { print max + 2 }')
 
     # Determine number of columns that can fit in the terminal
-    num_columns=$(((columns / (max_width + 5) - 1)))
+    num_columns=$((columns / (max_width + 5) - 1))
     num_columns=$((num_columns > 0 ? num_columns : 1))  # Ensure at least one column
 
     echo -e "${ORANGE}${title}${NC}"
@@ -351,20 +351,19 @@ function display_list() {
     }
     END {
         if (NR % cols != 0) print ""  # Ensure proper formatting for partial rows
-    }
-    '
+    }'
+    echo ''
 }
 
 # @purpose: Display an error message and suggest similar commands based on partial user input.
 # @param $1 [Req]: The error message to display.
 # @param $2..$N [Req]: The partial command the user entered.
 function command_hint() {
-    local error_message="$1" user_input commands matches search_string index=1
+    local error_message="$1" user_input commands matches=() search_string index=1
     shift
 
     user_input=("$@")
     commands=("${PLUGINS[@]}" "${HHS_APP_FUNCTIONS[@]}" "${HHS_COMMANDS[@]}")
-    matches=()
 
     # Try to match commands by progressively reducing the user input words from the end
     while (( ${#user_input[@]} > 0 )); do
@@ -375,15 +374,11 @@ function command_hint() {
 
         # Find commands that contain the search_string as a substring
         for cmd in "${commands[@]}"; do
-            if [[ "$cmd" == *"$search_string"* ]]; then
-                matches+=("$cmd")
-            fi
+            [[ "$cmd" == *"${search_string}"* ]] && matches+=("$cmd")
         done
 
         # If matches are found, stop reducing the input further
-        if (( ${#matches[@]} > 0 )); then
-            break
-        fi
+        (( ${#matches[@]} > 0 )) && break
 
         # Remove the last word from user_input and try again
         unset 'user_input[-1]' &>/dev/null || break
@@ -399,9 +394,9 @@ function command_hint() {
           printf "%3d. ${BLUE}%s${NC}\n" "$index" "hhs ${match//_/ }"
           ((index++))
         done
-    else
-        echo -e "${YELLOW}${TIP_ICON} Tip: Type 'hhs list' to find out options.${NC}"
+        quit 0 ' '
     fi
+    echo -e "${YELLOW}${TIP_ICON} Tip: Type 'hhs list' to find out options.${NC}"
 
     quit 1  # Exit with an error
 }

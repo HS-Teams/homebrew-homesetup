@@ -115,7 +115,7 @@ is_updated() {
 update_hhs() {
 
   local repo_ver re ai_enabled
-  local VERSION_URL='https://raw.githubusercontent.com/yorevs/homesetup/master/.VERSION'
+  local VERSION_URL='https://github.com/HS-Teams/homesetup/blob/master/.VERSION'
 
   if [[ -n "${HHS_VERSION}" ]]; then
     clear
@@ -143,7 +143,7 @@ update_hhs() {
       fi
       stamp_next_update &>/dev/null
     else
-      quit 1 "${PLUGIN_NAME}: Unable to fetch '.VERSION' from git repository !"
+      quit 1 "${PLUGIN_NAME}: Unable to fetch '.VERSION' ! ${repo_ver:-nada}"
     fi
   else
     quit 1 "${PLUGIN_NAME}: HHS_VERSION is undefined. HomeSetup installation is incomplete!"
