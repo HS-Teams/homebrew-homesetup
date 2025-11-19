@@ -36,8 +36,8 @@ nav:
   - Handbook:
     - Overview: 'handbook/handbook.md'
     - Pages:
-      - Applications Overview: 'handbook/pages/applications.md/#bash-applications'
-      - Functions Overview: 'handbook/pages/functions.md/#standard-tools'
+      - Applications Overview: 'handbook/pages/applications.md#bash-applications'
+      - Functions Overview: 'handbook/pages/functions.md#standard-tools'
       - Applications:
         - hhs-app: 'handbook/pages/applications/bash/hhs-app.md'
         - check-ip: 'handbook/pages/applications/bash/check-ip.md'
@@ -66,8 +66,8 @@ nav:
           - TOML Utilities: 'handbook/pages/functions/std-tools/toml-utilities.md'
           - Tool Checks: 'handbook/pages/functions/std-tools/toolchecks.md'
   - Misc:
-    - CHANGELOG: 'CHANGELOG.md'
-    - Color LS Setup: 'COLOR_LS_SETUP.md'
-    - Firebase Setup: 'FIREBASE_SETUP.md'
-    - Showcase: 'SHOWCASE.md'
-    - Usage: 'USAGE.md'
+    - CHANGELOG: 'docs/CHANGELOG.md'
+    - Color LS Setup: 'docs/COLOR_LS_SETUP.md'
+    - Firebase Setup: 'docs/FIREBASE_SETUP.md'
+    - Showcase: 'docs/SHOWCASE.md'
+    - Usage: 'docs/USAGE.md'

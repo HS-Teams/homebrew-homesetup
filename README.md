@@ -6,7 +6,7 @@
 
 [![Terminal](https://img.shields.io/badge/Terminal-black?logo=gnometerminal&logoColor=white)](https://github.com/yorevs/homesetup)
 [![License](https://img.shields.io/badge/License-MIT-gray)](LICENSE.md)
-[![Release](https://img.shields.io/badge/Release-v1.9.10-gray)](docs/CHANGELOG.md#unreleased)
+[![Release](https://img.shields.io/badge/Release-v1.9.10-gray)](docs/CHANGELOG.md)
 [![Gitter](https://img.shields.io/badge/Gitter-Join%20Chat-brightgreen?logo=gitter)](https://gitter.im/yorevs-homesetup/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Donate](https://img.shields.io/badge/PayPal-Donate-yellow?logo=paypal&logoColor=white)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=J5CDEFLF6M3H4)
 [![Build](https://github.com/yorevs/homesetup/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/yorevs/homesetup/actions/workflows/build-and-test.yml)
@@ -269,7 +269,7 @@ HomeSetup integrates [Delta](https://github.com/dandavison/delta), a syntax-high
 
 To enable it for your git installation, add the following to your `~/.gitconfig`:
 
-```toml
+```
 [core]
   pager = delta
 
