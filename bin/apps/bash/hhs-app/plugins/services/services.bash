@@ -27,7 +27,7 @@ USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name]
  ___  ___ _ ____   _(_) ___ ___  ___
 / __|/ _ \\ '__\\ \\ / / |/ __/ _ \\/ __|
 \\__ \\  __/ |   \\ V /| | (_|  __/\\__ \\
-|___/\\___|_|    \\_/ |_|\\___\\___||___\\/
+|___/\\___|_|    \\_/ |_|\\___\\___||___\\/...${HHS_MY_OS_RELEASE}
 
   HomeSetup services v${VERSION}.
 
@@ -84,19 +84,19 @@ function manage_service() {
   os="$(detect_os)"
 
   case "${os}" in
-    darwin) brew services "${action}" "${service}" ;;
-    alpine) rc-service "${service}" "${action}" ;;
-    debian|fedora|centos) systemctl "${action}" "${service}" ;;
+    darwin) brew services "${action}" "${service}" &>/dev/null ;;
+    alpine) rc-service "${service}" "${action}" &>/dev/null ;;
+    debian|fedora|centos) systemctl "${action}" "${service}" &>/dev/null ;;
     *) quit 1 "Unsupported OS: ${os}" ;;
   esac
+
+  return $?
 }
 
 # @param $1 [Opt]: service filter (case-insensitive)
 # @purpose: List all services with standardized dot-padded and colorized status
 function list_services_status() {
-  local filter="${1:-}"
-  local os service status longest=0 line
-  local service_name_padded=""
+  local filter="${1:-}" os service status longest=0 line service_name_padded=""
   local -a raw_services=()
 
   os="$(detect_os)"
@@ -125,7 +125,7 @@ function list_services_status() {
         }')
       ;;
     *)
-      quit 2 "Unsupported OS: ${os}"
+      quit 2 "Unsupported OS: \"${os}\""
       ;;
   esac
 
@@ -136,8 +136,9 @@ function list_services_status() {
     [[ ${#service} -gt ${longest} ]] && longest=${#service}
   done
 
-  # Print header (unpadded)
-  printf "%b\n" "${WHITE}Service$(printf '%*s' $((longest + 3 - 7)) '') Status${NC}"
+  printf -v dash_pad '%*s' $((longest + 10)) ''
+  dash_pad=${dash_pad// /-}
+  printf "%b\n%s\n" "${WHITE}Service$(printf '%*s' $((longest + 3 - 7)) '') Status${NC}" "${dash_pad}"
 
   # Second pass: print results with proper dot padding
   for line in "${raw_services[@]}"; do
@@ -147,15 +148,12 @@ function list_services_status() {
     [[ -n "${filter}" && ! "${service,,}" =~ ${filter,,} ]] && continue
 
     service_name_padded="${service}"
-    while [[ ${#service_name_padded} -lt $((longest + 3)) ]]; do
-      service_name_padded+="."
-    done
+    while [[ ${#service_name_padded} -lt $((longest + 3)) ]]; do service_name_padded+="."; done
 
-    if [[ "${status}" =~ ^(started|running|enabled|active)$ ]]; then
-      printf "%b %b\n" "${YELLOW}${service_name_padded}${NC}" "${GREEN} up${NC}"
-    else
-      printf "%b %b\n" "${YELLOW}${service_name_padded}${NC}" "${RED} down${NC}"
-    fi
+    [[ "${status}" =~ ^(started|running|enabled|active)$ ]] &&
+      printf "%b %b\n" "${HHS_HIGHLIGHT_COLOR}${service_name_padded}${NC}" "${GREEN} up${NC}" && continue
+
+    printf "%b %b\n" "${HHS_HIGHLIGHT_COLOR}${service_name_padded}${NC}" "${RED} down${NC}"
   done
 }
 
@@ -172,12 +170,20 @@ function execute() {
       version ;;
     start|stop|restart)
       [[ -z "${service}" ]] && quit 1 "Missing service name."
-      manage_service "${operation}" "${service}" || quit 1
+      echo -en "${YELLOW}${operation^} service \"${service}\"...${NC} "
+      manage_service "${operation}" "${service}" && quit 0 "${GREEN}OK${NC}"
+      echo -e "${RED}FAILED${NC}"
+      quit 1
       ;;
     status)
+      echo -e "${YELLOW}Fetching services statuses...${NC}\n"
       list_services_status "${service}"
       ;;
     *)
-      quit 2 "Unknown operation: ${operation}" ;;
+      echo -e "${RED}Unknown operation: \"${operation}\"\n"
+      quit 2 "${YELLOW}${TIP_ICON} Tip: Try one of: start, stop, restart, status${NC}"
+      ;;
   esac
+
+  quit 0
 }
