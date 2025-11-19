@@ -96,12 +96,12 @@ export HHS_ALIASDEF="${HHS_DIR}"/.aliasdef
 # Load all dotfiles following the order.
 # Notice that the order here is important, do not reorder it.
 DOTFILES=(
-  'bash_env'
-  'bash_colors'
-  'bash_prompt'
   'bash_aliases'
-  'bash_icons'
+  'bash_colors'
+  'bash_env'
   'bash_functions'
+  'bash_icons'
+  'bash_prompt'
   'profile'
 )
 

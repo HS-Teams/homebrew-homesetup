@@ -25,13 +25,16 @@ usage: ${APP_NAME} <arguments> [options]
 # Default identifiers to be unset
 UNSETS=('quit' 'usage' 'version' 'trim')
 
+# Unset to allow sourcing them
+unset HHS_ACTIVE_DOTFILES
+
 # We need to load the dotfiles below due to non-interactive shell.
 [[ -s "${HOME}"/.bash_commons ]] && source "${HOME}"/.bash_commons
-[[ -s "${HOME}"/.bash_env ]] && source "${HOME}"/.bash_env
-[[ -s "${HOME}"/.bash_colors ]] && source "${HOME}"/.bash_colors
-[[ -s "${HOME}"/.bash_icons ]] && source "${HOME}"/.bash_icons
-[[ -s "${HOME}"/.bash_aliases ]] && source "${HOME}"/.bash_aliases
-[[ -s "${HOME}"/.bash_functions ]] && source "${HOME}"/.bash_functions
+[[ -s "${HOME}"/.bash_env ]] && __hhs_source source "${HOME}"/.bash_env
+[[ -s "${HOME}"/.bash_colors ]] && __hhs_source "${HOME}"/.bash_colors
+[[ -s "${HOME}"/.bash_icons ]] && __hhs_source "${HOME}"/.bash_icons
+[[ -s "${HOME}"/.bash_aliases ]] && __hhs_source "${HOME}"/.bash_aliases
+[[ -s "${HOME}"/.bash_functions ]] && __hhs_source "${HOME}"/.bash_functions
 
 # Execute a cleanup after the application has exited.
 trap _app_cleanups_ EXIT
@@ -72,7 +75,7 @@ function usage() {
 
 # @purpose: Display the current application version and exit.
 function version() {
-  quit 0 "$APP_NAME v$VERSION"
+  quit 0 "${APP_NAME} v${VERSION}"
 }
 
 # Check if the user passed the help or version parameters.

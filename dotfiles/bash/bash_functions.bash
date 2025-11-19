@@ -14,43 +14,47 @@
 # !NOTICE: Do not change this file. To customize your functions edit the file ~/.functions
 
 # Do not source this file multiple times.
-list_contains "${HHS_ACTIVE_DOTFILES}" "bash_functions" && __hhs_log "DEBUG" "$0 was already loaded!"
+if list_contains "${HHS_ACTIVE_DOTFILES}" "bash_functions"; then
+  __hhs_log "DEBUG" "$0 was already loaded!"
+else
 
-export HHS_ACTIVE_DOTFILES="${HHS_ACTIVE_DOTFILES} bash_functions"
+  export HHS_ACTIVE_DOTFILES="${HHS_ACTIVE_DOTFILES} bash_functions"
 
-# Load all function files.
-read -r -d '' -a all < <(find "${HHS_HOME}/bin/hhs-functions/bash" -type f -name "*.bash" | sort | uniq)
-__hhs_log "DEBUG" "Loading (${#all[@]}) hhs-function files"
-for file in "${all[@]}"; do
-  __hhs_log "DEBUG" "Loading ${file}"
-  __hhs_source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
-done
+  # Load all function files.
+  read -r -d '' -a all < <(find "${HHS_HOME}/bin/hhs-functions/bash" -type f -name "*.bash" | sort | uniq)
+  __hhs_log "DEBUG" "Loading (${#all[@]}) hhs-function files"
+  for file in "${all[@]}"; do
+    __hhs_log "DEBUG" "Loading ${file}"
+    __hhs_source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
+  done
 
-# Load all dev tools files.
-read -r -d '' -a all < <(find "${HHS_HOME}/bin/dev-tools/bash" -type f -name "*.bash" | sort | uniq)
-__hhs_log "DEBUG" "Loading (${#all[@]}) dev-tools files"
-for file in "${all[@]}"; do
-  __hhs_log "DEBUG" "Loading ${file}"
-  __hhs_source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
-done
+  # Load all dev tools files.
+  read -r -d '' -a all < <(find "${HHS_HOME}/bin/dev-tools/bash" -type f -name "*.bash" | sort | uniq)
+  __hhs_log "DEBUG" "Loading (${#all[@]}) dev-tools files"
+  for file in "${all[@]}"; do
+    __hhs_log "DEBUG" "Loading ${file}"
+    __hhs_source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
+  done
 
-unset -f all
+  unset -f all
 
-# Unalias any hhs found because we need this name to use for HomeSetup
-unalias hhs &> /dev/null
-__hhs_has 'hhs' && __hhs_log "ERROR" "'hhs' is already defined: $(command -v 'hhs')"
+  # Unalias any hhs found because we need this name to use for HomeSetup
+  unalias hhs &> /dev/null
+  __hhs_has 'hhs' && __hhs_log "ERROR" "'hhs' is already defined: $(command -v 'hhs')"
 
-# @function: Wrapper to either invoke the hhs application or change to HHS_HOME or HHS_DIR.
-# @param $* [Opt] : All parameters are passed to hhs.bash.
-function __hhs() {
+  # @function: Wrapper to either invoke the hhs application or change to HHS_HOME or HHS_DIR.
+  # @param $* [Opt] : All parameters are passed to hhs.bash.
+  function __hhs() {
 
-  if [[ -z "${1}" || "${1}" == 'home' ]]; then
-    __hhs_change_dir "${HHS_HOME}" || return 1
-  elif [[ "${1}" == 'dir' ]]; then
-    __hhs_change_dir "${HHS_DIR}" || return 1
-  else
-    hhs.bash "${@}" || return 1
-  fi
+    if [[ -z "${1}" || "${1}" == 'home' ]]; then
+      __hhs_change_dir "${HHS_HOME}" || return 1
+    elif [[ "${1}" == 'dir' ]]; then
+      __hhs_change_dir "${HHS_DIR}" || return 1
+    else
+      hhs.bash "${@}" || return 1
+    fi
 
-  return 0
-}
+    return 0
+  }
+
+fi
