@@ -94,10 +94,11 @@ function manage_service() {
 }
 
 # @param $1 [Opt]: service filter (case-insensitive)
-# @purpose: List all services with standardized dot-padded and colorized status
+# @purpose: List all services with standardized indexed, dot-padded and colorized status
 function list_services_status() {
-  local filter="${1:-}" os service status longest=0 line service_name_padded=""
+  local filter="${1:-}" os service status longest=0 line service_entry=""
   local -a raw_services=()
+  local i total width service_name padded_line
 
   os="$(detect_os)"
 
@@ -129,31 +130,31 @@ function list_services_status() {
       ;;
   esac
 
-  # First pass: find longest service name
+  total="${#raw_services[@]}"
+  width="${#total}"  # padding width for index (based on total)
+
+  # First pass: find longest service name (filtered only)
   for line in "${raw_services[@]}"; do
     service="${line%%:*}"
     [[ -n "${filter}" && ! "${service,,}" =~ ${filter,,} ]] && continue
     [[ ${#service} -gt ${longest} ]] && longest=${#service}
   done
 
-  printf -v dash_pad '%*s' $((longest + 10)) ''
+  printf -v dash_pad '%*s' $((width + 2 + longest + 10)) ''
   dash_pad=${dash_pad// /-}
-  printf "%b\n%s\n" "${WHITE}Service$(printf '%*s' $((longest + 3 - 7)) '') Status${NC}" "${dash_pad}"
+  printf "%b\n%b\n" "${WHITE}Service$(printf '%*s' 13 ' ')Status${NC}" "${dash_pad}"
 
-  # Second pass: print results with proper dot padding
+  i=1
   for line in "${raw_services[@]}"; do
     service="${line%%:*}"
     status="${line##*:}"
-
     [[ -n "${filter}" && ! "${service,,}" =~ ${filter,,} ]] && continue
-
-    service_name_padded="${service}"
-    while [[ ${#service_name_padded} -lt $((longest + 3)) ]]; do service_name_padded+="."; done
-
+    printf -v service_entry "%${width}d. %s" "${i}" "${service}"
+    while [[ ${#service_entry} -lt $((width + 2 + longest + 3)) ]]; do service_entry+="."; done
+    ((i++))
     [[ "${status}" =~ ^(started|running|enabled|active)$ ]] &&
-      printf "%b %b\n" "${HHS_HIGHLIGHT_COLOR}${service_name_padded}${NC}" "${GREEN} up${NC}" && continue
-
-    printf "%b %b\n" "${HHS_HIGHLIGHT_COLOR}${service_name_padded}${NC}" "${RED} down${NC}"
+      { printf "%b %b\n" "${HHS_HIGHLIGHT_COLOR}${service_entry}${NC}" "${GREEN} Up${NC}"; continue; }
+    printf "%b %b\n" "${HHS_HIGHLIGHT_COLOR}${service_entry}${NC}" "${RED} Down${NC}"
   done
 }
 

@@ -13,7 +13,7 @@
 # !NOTICE: Do not change this file. To customize your functions edit the file ~/.functions
 
 # Internal: Trim leading and trailing whitespace preserving interior spacing.
-function __hhs_toml__trim() {
+__hhs_toml__trim() {
 
   local trimmed="${1}"
 
@@ -24,7 +24,7 @@ function __hhs_toml__trim() {
 }
 
 # Internal: Remove inline comments that start with # outside quoted strings.
-function __hhs_toml__strip_comments() {
+__hhs_toml__strip_comments() {
 
   local line="${1}" result="" char prev='' in_single=0 in_double=0
   local i length=${#line}
@@ -53,7 +53,7 @@ function __hhs_toml__strip_comments() {
 }
 
 # Internal: Normalize a TOML key removing surrounding quotes.
-function __hhs_toml__normalize_key() {
+__hhs_toml__normalize_key() {
 
   local key="${1}"
   key="$(__hhs_toml__trim "${key}")"
@@ -68,7 +68,7 @@ function __hhs_toml__normalize_key() {
 }
 
 # Internal: Escape regex metacharacters so sed/regex usage is safe.
-function __hhs_toml__escape_regex() {
+__hhs_toml__escape_regex() {
 
   local text="${1}" escaped=""
   local i length=${#text} char
@@ -89,7 +89,7 @@ function __hhs_toml__escape_regex() {
 }
 
 # Internal: Build the fully qualified group selector.
-function __hhs_toml__group_selector() {
+__hhs_toml__group_selector() {
 
   local group="${1}"
 

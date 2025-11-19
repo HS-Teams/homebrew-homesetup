@@ -44,8 +44,6 @@ if ! type -t _app_cleanups_ >/dev/null 2>&1; then
   # Re-export active dotfiles.
   export HHS_ACTIVE_DOTFILES="${OLD_DOTFILES[*]}"
 
-  __hhs_log "INFO" "${APP_NAME}: Loading application common functions and variables..."
-
   # Execute a cleanup after the application has exited.
   trap _app_cleanups_ EXIT
 

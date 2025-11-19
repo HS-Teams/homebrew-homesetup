@@ -305,7 +305,7 @@ function search_hhs_functions() {
     fn_name=$(awk -F ':function ' '{print $2}' <<<"${fn_line}")
     fn_name=$(printf '%-35.35s' "${fn_name//\(\)/}")
     desc=$(get_desc "${fn_line}")
-    HHS_FUNCTIONS+=("${BLUE}${filename// /.} ${GREEN}=> ${NC}${fn_name// /.} : ${YELLOW}${desc}")
+    HHS_FUNCTIONS+=("${BLUE}${filename// /.} ${GREEN} ${NC}${fn_name// /.} : ${YELLOW}${desc}")
   done
   IFS="${OLDIFS}"
 
