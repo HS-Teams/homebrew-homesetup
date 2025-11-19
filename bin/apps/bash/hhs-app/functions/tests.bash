@@ -90,7 +90,7 @@ function tests() {
         continue
       fi
       echo -en "${status} "
-      printf "${BLUE}TC-%${len}d${NC} %s\n" "${num}" "${details}"
+      printf "${BLUE}TC-%0${len}d${NC} %s\n" "${num}" "${details}"
     done < <(bats -rtT --print-output-on-failure "${next}" 2>&1)
     [[ $num -ne $expected_total ]] && {
       echo -en "\n${RED}[${next##*/}] ${WHITE}ERROR: \"${next}\" tests ($total) expected ($expected_total)!${NC}\n"
