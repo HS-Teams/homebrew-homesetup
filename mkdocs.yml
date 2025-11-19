@@ -13,6 +13,8 @@ theme:
     - navigation.instant
     - navigation.top
     - content.code.copy
+  icon:
+    logo: material/cog
 
 repo_url: https://github.com/HS-Teams/homesetup
 repo_name: HS-Teams/homesetup
@@ -34,20 +36,38 @@ nav:
   - Handbook:
     - Overview: 'handbook/handbook.md'
     - Pages:
-      - Applications Overview: 'handbook/pages/applications.md'
-      - Functions Overview: 'handbook/pages/functions.md'
-      - Applications: # Start of the nested folder content
-        - hhs-app: 'handbook/pages/applications/bash/hhs-app/hhs-app.md'
+      - Applications Overview: 'handbook/pages/applications.md/#bash-applications'
+      - Functions Overview: 'handbook/pages/functions.md/#standard-tools'
+      - Applications:
+        - hhs-app: 'handbook/pages/applications/bash/hhs-app.md'
         - check-ip: 'handbook/pages/applications/bash/check-ip.md'
         - fetch: 'handbook/pages/applications/bash/fetch.md'
-      - Functions: # Start of the nested folder content
-        - dev-tools: 'handbook/pages/functions/dev-tools/docker-tools.md'
-        - std-tools: 'handbook/pages/functions/std-tools/aliases-related.md'
+      - Functions:
+        - Dev Tools:
+          - Docker Tools: 'handbook/pages/functions/dev-tools/docker-tools.md'
+          - Git Tools: 'handbook/pages/functions/dev-tools/git-tools.md'
+          - Gradle Tools: 'handbook/pages/functions/dev-tools/gradle-tools.md'
+        - Standard Tools:
+          - Aliases Related: 'handbook/pages/functions/std-tools/aliases-related.md'
+          - Built-ins: 'handbook/pages/functions/std-tools/built-ins.md'
+          - clitt: 'handbook/pages/functions/std-tools/clitt.md'
+          - Command Tool: 'handbook/pages/functions/std-tools/command-tool.md'
+          - Directory Related: 'handbook/pages/functions/std-tools/directory-related.md'
+          - File Related: 'handbook/pages/functions/std-tools/file-related.md'
+          - Network Related: 'handbook/pages/functions/std-tools/network-related.md'
+          - Paths Tool: 'handbook/pages/functions/std-tools/paths-tool.md'
+          - Profile Related: 'handbook/pages/functions/std-tools/profile-related.md'
+          - Search Related: 'handbook/pages/functions/std-tools/search-related.md'
+          - Security Related: 'handbook/pages/functions/std-tools/security-related.md'
+          - Shell Utilities: 'handbook/pages/functions/std-tools/shell-utilities.md'
+          - System Utilities: 'handbook/pages/functions/std-tools/system-utilities.md'
+          - Taylor Tool: 'handbook/pages/functions/std-tools/taylor-tool.md'
+          - Text Utilities: 'handbook/pages/functions/std-tools/text-utilities.md'
+          - TOML Utilities: 'handbook/pages/functions/std-tools/toml-utilities.md'
+          - Tool Checks: 'handbook/pages/functions/std-tools/toolchecks.md'
   - Misc:
     - CHANGELOG: 'CHANGELOG.md'
-    - Code of Conduct: 'CODE_OF_CONDUCT.md'
     - Color LS Setup: 'COLOR_LS_SETUP.md'
-    - Contributing: 'CONTRIBUTING.md'
     - Firebase Setup: 'FIREBASE_SETUP.md'
     - Showcase: 'SHOWCASE.md'
     - Usage: 'USAGE.md'

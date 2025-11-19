@@ -17,20 +17,56 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
     ### Removed
 
-## 1.9.1 - YYY-MM-DD
-
-## Unreleased
-
-### Added
+## 1.9.1 - 2025/11/11
 
 ### Fixed
 
+* Installer CLI options, uninstall cleanup, and dependency validation
+* Fetch script header parsing and request formatting
+* JSON formatting and version fixture generation
+* Updater, environment variables, and venv activation/deactivation behavior
+* Listing display, error output, and text formatting in __hhs_errcho and related helpers
+* Ownership and permissions in changelog and GitHub Actions
+* Homebrew installation formula, dependency resolution, and brew handling across multiple iterations
+* Dockerfile builds, multi-distro compatibility (Alpine, Fedora, CentOS, Ubuntu), and image publishing pipeline
+* GHA (GitHub Actions) build workflows, docker-deploy, and release jobs
+* Version bump workflow and revision tracking during bumpver auto-tagging
+* Tests and CI pipeline executions for stability and environment consistency
+
 ### Updated
+
+* Shell scripts (hhs-dirs, __hhs_errcho, __hhs_utoh, etc.) for cleaner output and bug fixes
+* Package manager definitions and dependencies
+* Dockerfiles and related assets to reflect latest environment adjustments
+* Configuration files for WezTerm, Zsh, NeoVim, and terminal assets
+* Documentation, handbook wording, and repository metadata
+* Copyright, author info, and contact details
+* GitHub Actions to latest versions and improved workflow consistency
+* Prompt tools integration and auxiliary shell scripts for modern presets
+* Bats tests and internal helpers for improved validation
+* Changelog generation scripts for consistent tagging
 
 ### Removed
 
+* Deprecated Glow integration from required tools list
+* Redundant or legacy installer logic
 
-## 1.8.1 - 2024-11-26 → 2025-11-11
+### Added
+
+* Complete Bats test coverage for all HHS components (CLI, paths, files, functions, utilities, search, sys, etc.)
+* JSON formatting to fetch script and expanded CLI argument parsing
+* Venv management, auto-reload of environment, and dependency reloading behavior
+* Password generator (__hhs_pwgen) and clipboard enhancements
+* New setup and init logs for diagnostics
+* Profile activators and tool helpers for TUI/CLI integration
+* NeoVim and WezTerm configuration assets
+* Docker cleanup and Python package maintenance scripts
+* Support for starship prompt, zoxide, and delta integration
+* Auto-tag and Gradle publish workflow improvements
+* New changelog automation and release versioning
+
+
+## 1.8.1 - 2024-11-26
 
 ### Fixed
 
