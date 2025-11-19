@@ -84,7 +84,7 @@ function funcs() {
   columns="$(tput cols)"
   count="${#HHS_FUNCTIONS[@]}"
   for line in "${HHS_FUNCTIONS[@]}"; do
-    fn_name=$(awk 'BEGIN { FS = "=>" } ; { print $2 }' <<< "${line}")
+    fn_name=$(awk 'BEGIN { FS = "" } ; { print $2 }' <<< "${line}")
     fn_name=${fn_name%%:*}
     fn_name=$(trim <<< "${fn_name}")
     if [[ ${fn_name} =~ ${filter} ]]; then

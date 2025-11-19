@@ -116,12 +116,12 @@ CUSTOM_DOTFILES=(
    'functions'
 )
 
-# Source the bash common functions. Logs are available below here.
-source "${HHS_HOME}/dotfiles/bash/bash_commons.bash"
-
 # Re-create the HomeSetup log file.
 started="$(${PYTHON3} -c 'import time; print(int(time.time() * 1000))')"
 echo -e "HomeSetup is starting: $(date)\n" >"${HHS_LOG_FILE}"
+
+# Source the bash common functions. Logs are available below here.
+source "${HHS_HOME}/dotfiles/bash/bash_commons.bash"
 
 # Initialization setup (homesetup.toml).
 if [[ ! -s "${HHS_SETUP_FILE}" ]]; then

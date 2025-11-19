@@ -75,5 +75,5 @@ load_bats_libs
 # TC - 4
 @test "after-installation-all-homesetup-dotfiles-should-be-active" {
   run echo "$HHS_ACTIVE_DOTFILES"
-  assert_output --partial "bashrc hhsrc bash_commons bash_env bash_colors bash_prompt bash_aliases bash_icons bash_functions"
+  assert_output "bashrc hhsrc bash_commons bash_aliases bash_colors bash_env bash_functions bash_icons bash_prompt"
 }
