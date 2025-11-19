@@ -23,7 +23,7 @@ read -r -d '' -a all < <(find "${HHS_HOME}/bin/hhs-functions/bash" -type f -name
 __hhs_log "DEBUG" "Loading (${#all[@]}) hhs-function files"
 for file in "${all[@]}"; do
   __hhs_log "DEBUG" "Loading ${file}"
-  source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
+  __hhs_source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
 done
 
 # Load all dev tools files.
@@ -31,7 +31,7 @@ read -r -d '' -a all < <(find "${HHS_HOME}/bin/dev-tools/bash" -type f -name "*.
 __hhs_log "DEBUG" "Loading (${#all[@]}) dev-tools files"
 for file in "${all[@]}"; do
   __hhs_log "DEBUG" "Loading ${file}"
-  source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
+  __hhs_source "${file}" || __hhs_log "ERROR" "Unable to source file: ${file}"
 done
 
 unset -f all
@@ -40,7 +40,7 @@ unset -f all
 unalias hhs &> /dev/null
 __hhs_has 'hhs' && __hhs_log "ERROR" "'hhs' is already defined: $(command -v 'hhs')"
 
-# @function: Invoke the hhs application.
+# @function: Wrapper to either invoke the hhs application or change to HHS_HOME or HHS_DIR.
 # @param $* [Opt] : All parameters are passed to hhs.bash.
 function __hhs() {
 
@@ -52,5 +52,5 @@ function __hhs() {
     hhs.bash "${@}" || return 1
   fi
 
-  return $?
+  return 0
 }

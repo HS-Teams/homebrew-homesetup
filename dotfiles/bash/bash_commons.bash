@@ -18,7 +18,6 @@ export HHS_ACTIVE_DOTFILES="${HHS_ACTIVE_DOTFILES} bash_commons"
 
 # @function: Private function that issues a HomeSetup restart.
 function __hhs_restart__() {
-
   JOB_NAME='HomeSetup restart!' source "${HOME}/.bashrc"
 }
 
@@ -30,7 +29,7 @@ function __hhs_errcho() {
   local app_name="${1:-$$}"
 
   if [[ "$#" -lt 2 || "$1" == "-h" || "$1" == "--help" ]]; then
-    echo "usage: ${FUNCNAME[0]} <message>"
+    echo "usage: ${FUNCNAME[0]} <app_name> <message>"
     return 1
   fi
 
@@ -60,14 +59,10 @@ function __hhs_has() {
 # @function: Check if a python module is installed.
 # @param $1 [Req] : The python module to check.
 function __hhs_has_module() {
-  local module="$1"
 
-  if [[ $# -eq 0 || '-h' == "$1" ]]; then
-    echo "usage: ${FUNCNAME[0]} <python module/package>"
-    return 1
-  fi
+  [[ $# -eq 0 || '-h' == "$1" ]] && { echo "usage: ${FUNCNAME[0]} <module/package>"; return 1; }
 
-  pip show "${module}" &>/dev/null
+  pip show "${1}" &>/dev/null
 
   return $?
 }
@@ -98,10 +93,7 @@ function __hhs_log() {
 
   local level="${1}" message="${2}"
 
-  if [[ $# -lt 2 || '-h' == "$1" ]]; then
-    echo "usage: ${FUNCNAME[0]} <log_level> <log_message>"
-    return 1
-  fi
+  [[ $# -lt 2 || '-h' == "$1" ]] && { echo "usage: ${FUNCNAME[0]} <level> <message>"; return 1; }
 
   case "${level}" in
   'INFO' | 'WARN' | 'ERROR' | 'ALL')
@@ -126,17 +118,13 @@ function __hhs_source() {
 
   local filepath="$1"
 
-  if [[ $# -eq 0 || '-h' == "$1" ]]; then
-    echo "usage: ${FUNCNAME[0]} <filepath>"
-  elif [[ ! -s "${filepath}" ]]; then
-    __hhs_log "WARN" "${FUNCNAME[0]}: Skipping \"${filepath}\" because it was not found or empty!"
+  [[ $# -eq 0 || '-h' == "$1" ]] && { echo "usage: ${FUNCNAME[0]} <filepath>"; return 1; }
+
+  if [[ ! -s "${filepath}" ]]; then
+    __hhs_log "WARN" "${FUNCNAME[0]}: Skipping \"${filepath}\" because it was not found/empty!"
   else
-    if source "${filepath}" >>"${HHS_LOG_FILE}"; then
-      __hhs_log "DEBUG" "File \"${filepath}\" was loaded !"
-      return 0
-    else
-      __hhs_log "ERROR" "Failed to load file \"${filepath}\"!"
-    fi
+    source "${filepath}" >>"${HHS_LOG_FILE}" && { __hhs_log "DEBUG" "File \"${filepath}\" was loaded !"; return 0; }
+    __hhs_log "ERROR" "Failed to load file \"${filepath}\"!"
   fi
 
   return 1
@@ -150,21 +138,15 @@ function __hhs_alias() {
 
   local all_args alias_expr alias_name
 
-  if [[ $# -eq 0 || '-h' == "$1" ]]; then
-    echo "usage: ${FUNCNAME[0]} <alias_name>='<alias_expr>"
-    return 1
-  fi
+  [[ $# -eq 0 || '-h' == "$1" ]] && { echo "usage: ${FUNCNAME[0]} <alias_name>='<alias_expr>'"; return 1; }
 
   all_args="${*}"
   alias_expr="${all_args#*=}"
   alias_name="${all_args//=*/}"
 
   if ! type "$alias_name" >/dev/null 2>&1; then
-    if alias "${alias_name}"="${alias_expr}" >/dev/null 2>&1; then
-      return 0
-    else
-      __hhs_errcho "${FUNCNAME[0]}" "Failed to alias: \"${alias_name}\" !" 2>&1
-    fi
+    alias "${alias_name}"="${alias_expr}" >/dev/null 2>&1 && return 0
+    __hhs_errcho "${FUNCNAME[0]}" "Failed to alias: \"${alias_name}\" !" 2>&1
   else
     __hhs_log "WARN" "Setting alias: \"${alias_name}\" was skipped because it already exists !"
   fi
@@ -175,12 +157,9 @@ function __hhs_alias() {
 # @function: Check whether an URL is reachable.
 # @param $1 [Req] : The URL to test reachability.
 function __hhs_is_reachable() {
-  if [[ $# -eq 0 || '-h' == "$1" || -z "$1" ]]; then
-    echo "usage: ${FUNCNAME[0]} <url>"
-    return 1
-  fi
+  [[ $# -eq 0 || '-h' == "$1" || -z "$1" ]] && { echo "usage: ${FUNCNAME[0]} <url>"; return 1; }
 
-  \curl --output /dev/null --silent --connect-timeout 1 --max-time 1 --head --fail "${1}"
+  curl --output /dev/null --silent --connect-timeout 1 --max-time 1 --head --fail "${1}"
 
   return $?
 }
@@ -191,12 +170,8 @@ if ! __hhs_has 'ised'; then
   # @param $1..$N [Req] : Sed parameters.
   function ised() {
     case "${HHS_MY_OS}" in
-    Darwin)
-      sed -i '' -E "${@}"
-      ;;
-    Linux)
-      sed -i'' -r "${@}"
-      ;;
+    Darwin) sed -i '' -E "${@}" ;;
+    Linux) sed -i'' -r "${@}" ;;
     esac
 
     return $?
@@ -210,12 +185,8 @@ if ! __hhs_has 'esed'; then
   # @param $1..$N [Req] : Sed parameters.
   function esed() {
     case "${HHS_MY_OS}" in
-    Darwin)
-      sed -E "${@}"
-      ;;
-    Linux)
-      sed -r "${@}"
-      ;;
+    Darwin) sed -E "${@}" ;;
+    Linux) sed -r "${@}" ;;
     esac
 
     return $?
@@ -236,7 +207,7 @@ function trim() {
     esed 's/^[[:blank:]]*|[[:blank:]]*$//g' "${file}"
   fi
 
-  return 0
+  return $?
 }
 
 # @purpose: Check whether the list contains the specified string.
@@ -249,6 +220,8 @@ function list_contains() {
   return 1
 }
 
+# @purpose: Clean ANSI escape sequences from text.
+# @param $1..$N [Req] : The text to be cleaned.
 function __hhs_clean_escapes() {
   sed -E 's/\x1b(\[[0-9;]*[a-zA-Z]|\([a-zA-Z])//g'
 }
@@ -269,7 +242,8 @@ function __hhs_clipboard() {
     __hhs_errcho "${FUNCNAME[0]}" "Clipboard copy not supported. Install xclip, xsel, or wl-copy."
     return 1
   fi
+
   ${cb_copy}
 
-  return 0
+  return $?
 }

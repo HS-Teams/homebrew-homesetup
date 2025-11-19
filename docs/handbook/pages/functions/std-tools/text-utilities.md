@@ -184,7 +184,7 @@ Convert unicode to hexadecimal.
 #### __hhs_errcho
 
 ```bash
-usage: __hhs_errcho <message>
+usage: __hhs_errcho <app_name> <message>
 ```
 
 ##### **Purpose**
@@ -197,15 +197,15 @@ Echo a message in red color into stderr.
 
 ##### **Parameters**
 
-  - $1 _Required_ : The message to be echoed.
+  - $1 _Required_ : The application name.
+  - $2..$N _Required_ : The message to be echoed.
 
 ##### **Examples**
 
-`__hhs_errcho 'Invalid parameters'`
+`✘ Fatal: bash  Invalid parameters`
 
 **Output**
 
 ```bash
 error: Invalid parameters
 ```
-
