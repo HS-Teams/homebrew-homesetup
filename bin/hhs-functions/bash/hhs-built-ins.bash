@@ -179,8 +179,6 @@ function __hhs_defs() {
 }
 
 # @function: Display all environment variables using filters.
-# @param $1 [Opt] : If -e is present, edit the env file, otherwise a case-insensitive filters to be used when listing.
-# @function: Display all environment variables using filters.
 # @param $1 [Opt] : If -e is present, edit the env file.
 # @param $* [Opt] : Filter string(s). Use -r to reveal secret values.
 function __hhs_envs() {
@@ -296,6 +294,34 @@ function __hhs_venv() {
   fi
 
   __hhs_restart__
+
+  return 0
+}
+
+# @function: Repeat the last N commands from history, executing one-by-one, stop on failure.
+# @param $1 [Opt]: Number of commands to repeat; defaults to 1.
+function __hhs_repeat() {
+  local count="${1}" hist_lines cmd_index cmd
+
+    if [[ "${#@}" -eq 0 || "${1}" == "-h" || "${1}" == "--help" ]]; then
+      echo "usage: ${FUNCNAME[0]} [N]"
+      echo ''
+      echo '    Arguments: '
+      echo '      <N>   : A positive number of last commands from history to repeat.'
+      return 1
+    fi
+
+  [[ "${count}" =~ ^[0-9]+$ ]] || { __hhs_errcho "${FUNCNAME[0]}" "Argument must be a positive integer."; return 1; }
+
+  hist_lines=$(history | tail -n "$((count + 1))" | head -n "${count}")
+  cmd_index=0
+  echo "${hist_lines}" | while IFS= read -r line; do
+    cmd=$(printf '%s\n' "${line}" | sed -E 's/^[[:space:]]*[0-9]+[[:space:]]+\[[^]]+\][[:space:]]+//')
+    [[ "${cmd}" == "${FUNCNAME[0]}"* ]] && continue
+    echo -e "${BLUE}Executing [${cmd_index}] -> ${cmd}${NC}"
+    eval "${cmd}" || { __hhs_errcho "${FUNCNAME[0]}" "Command failed: '${cmd}'"; return 1; }
+    cmd_index=$((cmd_index + 1))
+  done
 
   return 0
 }
