@@ -65,6 +65,7 @@ HomeSetup offers seamless integration with a variety of tools to enhance product
 - **[Delta](https://github.com/dandavison/delta):** A syntax-highlighting pager for git, diff, grep, and blame output.
 - **[Zoxide](https://github.com/ajeetdsouza/zoxide):** A smarter cd command. Supports all major shells.
 - **[TLDR](https://github.com/tldr-pages/tldr):** Collaborative cheatsheets for console commands.
+- **[Ollama AI](https://ollama.com):** Offline AI chat integration through the `hhs ask` plug-in, with context history, model selection, and automatic service management.
 
 ## Catalina moved from bash to zsh
 
