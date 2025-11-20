@@ -36,13 +36,13 @@ nav:
   - Handbook:
     - Overview: 'handbook/handbook.md'
     - Pages:
-      - Applications Overview: 'handbook/pages/applications.md#bash-applications'
-      - Functions Overview: 'handbook/pages/functions.md#standard-tools'
       - Applications:
+        - Overview: 'handbook/pages/applications/#bash-applications'
         - hhs-app: 'handbook/pages/applications/bash/hhs-app.md'
         - check-ip: 'handbook/pages/applications/bash/check-ip.md'
         - fetch: 'handbook/pages/applications/bash/fetch.md'
       - Functions:
+        - Overview: 'handbook/pages/functions/#bash-functions'
         - Dev Tools:
           - Docker Tools: 'handbook/pages/functions/dev-tools/docker-tools.md'
           - Git Tools: 'handbook/pages/functions/dev-tools/git-tools.md'
