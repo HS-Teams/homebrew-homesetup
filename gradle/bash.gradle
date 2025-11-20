@@ -127,3 +127,65 @@ task publish(type: Task) {
     }
   }
 }
+
+/* Install man pages */
+tasks.register('installManPages', Exec) {
+  description = 'Install man pages'
+  group = 'install'
+
+  commandLine 'bash', '-c', '''
+    set -e
+
+    # resolve prefix by OS
+    if [[ "$(uname)" == "Darwin" ]]; then
+      if command -v brew >/dev/null 2>&1; then
+        PREFIX="$(brew --prefix)"
+      else
+        PREFIX="/usr/local"
+      fi
+    else
+      PREFIX="/usr/local"
+    fi
+
+    MAN_DIR="${PREFIX}/share/man/man1"
+
+    install -d "${MAN_DIR}"
+    install -m 644 docs/man/man.1/*.1 "${MAN_DIR}"
+
+    # macOS doesn't need mandb
+    command -v mandb >/dev/null 2>&1 && sudo mandb || true
+  '''
+}
+
+/* Uninstall man pages */
+tasks.register('uninstallManPages', Exec) {
+  description = 'Uninstall man pages'
+  group = 'install'
+
+  commandLine 'bash', '-c', '''
+    set -e
+
+    # resolve prefix by OS
+    if [[ "$(uname)" == "Darwin" ]]; then
+      if command -v brew >/dev/null 2>&1; then
+        PREFIX="$(brew --prefix)"
+      else
+        PREFIX="/usr/local"
+      fi
+    else
+      PREFIX="/usr/local"
+    fi
+
+    MAN_DIR="${PREFIX}/share/man/man1"
+
+    # delete only the project's man pages
+    for f in docs/man/man.1/*.1; do
+      base="$(basename "$f")"
+      target="${MAN_DIR}/${base}"
+      [[ -f "$target" ]] && rm -f "$target"
+    done
+
+    # macOS has no mandb, ignore quietly
+    command -v mandb >/dev/null 2>&1 && sudo mandb || true
+  '''
+}
