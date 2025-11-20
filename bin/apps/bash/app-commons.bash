@@ -18,9 +18,31 @@ VERSION=${VERSION:-0.9.0}
 APP_NAME="${APP_NAME:-${0##*/}}"
 
 # Help message to be displayed by the application.
-USAGE=${USAGE:-"
+if [[ -z "${USAGE:-}" ]]; then
+  read -r -d '' USAGE <<USAGE
 usage: ${APP_NAME} <arguments> [options]
-"}
+    Common application helpers for HomeSetup scripts.
+
+    options:
+      -h | --help             : Display this help message.
+      -v | --version          : Display program version.
+
+    arguments:
+      arguments               : Script-specific positional arguments.
+
+    examples:
+      Show help for an app using the shared options:
+        => ${APP_NAME} --help
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - This usage is injected into applications that source app-commons.bash.
+USAGE
+fi
 
 # Default identifiers to be unset
 UNSETS=('quit' 'usage' 'version' 'trim')

@@ -35,42 +35,53 @@ STARSHIP_PRESETS=(
 )
 
 # Usage message
-USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [command]
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} [command] [options]
 
  ____  _                 _     _
 / ___|| |_ __ _ _ __ ___| |__ (_)_ __
 \___ \| __/ _\` | '__/ __| '_ \| | '_ \\
  ___) | || (_| | |  \__ \ | | | | |_) |
-|____/ \__\__,_|_|  |___/_| |_|_| .__/
+|____/ \__\__,_|_|  |___/_| |_|_|_| .__/
                                 |_|
 
   HomeSetup starship integration setup.
   Visit the Starship website at: https://starship.rs/
 
+    options:
+      -h | --help                : Display this help message.
+      -v | --version             : Display current plugin version.
+
     commands:
-      edit                  : Edit your starship configuration file (default command).
-      restore               : Restore HomeSetup defaults.
-      preset <preset_name>  : Configure your starship to a preset.
+      edit                       : Edit your starship configuration file (default command).
+      restore                    : Restore HomeSetup defaults.
+      preset <preset_name>       : Configure your starship to a preset.
 
     presets:
-      no-runtime-versions   : This preset hides the version of language runtimes. If you work in containers or
-                              virtualized environments, this one is for you!
-      bracketed-segments    : This preset changes the format of all the built-in modules to show their segment in
-                              brackets instead of using the default Starship wording ('via', 'on', etc.).
-      plain-text-symbols    : This preset changes the symbols for each module into plain text. Great if you don't have
-                              access to Unicode.
-      no-empty-icons        : This preset does not show icons if the toolset is not found.
-      tokyo-night           : This preset is inspired by tokyo-night-vscode-theme.
-      no-nerd-font          : This preset changes the symbols for several modules so that no Nerd Font symbols are used
-                              anywhere in the prompt.
-      pastel-powerline      : This preset is inspired by M365Princess (opens new window). It also shows how path
-                              substitution works in starship.
-      pure-preset           : This preset emulates the look and behavior of Pure.
-      nerd-font-symbols     : This preset changes the symbols for each module to use Nerd Font symbols.
+      no-runtime-versions        : Hide language runtime versions.
+      bracketed-segments         : Show modules in brackets instead of wording.
+      plain-text-symbols         : Use plain-text symbols for modules.
+      no-empty-icons             : Omit icons when toolsets are unavailable.
+      tokyo-night                : Inspired by tokyo-night-vscode-theme.
+      no-nerd-font               : Avoid Nerd Font symbols anywhere in the prompt.
+      pastel-powerline           : Inspired by M365Princess, demonstrates path substitution.
+      pure-preset                : Emulates the look and behavior of Pure.
+      nerd-font-symbols          : Use Nerd Font symbols for each module.
 
-    note:
-      - If no command is passed, the default editor will open the starship configuration file.
-"
+    examples:
+      Restore the default prompt:
+        => ${APP_NAME} ${PLUGIN_NAME} restore
+      Apply a preset interactively:
+        => ${APP_NAME} ${PLUGIN_NAME} preset
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - If no command is passed, the default editor opens the starship configuration file.
+USAGE
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 

@@ -21,7 +21,8 @@ UNSETS=(
 )
 
 # Usage message
-USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [options] <question>
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
     _        _
    / \\   ___| | __
@@ -32,17 +33,33 @@ USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [options] <question>
   Offline ollama-AI agent integration for HomeSetup v${VERSION}.
 
     options:
-      -h, --help                        show this help message and exit
-      -v, --version                     show version and exit
-      -c, --context                     show current ollama context (history) and exit
-      -r, --reset                       reset history before executing (fresh new session) and exit
-      -m, --models                      list available ollama models and exit
-      -s, --select-model [model_name]   select the ollama model to use
-      -k, --keep                        whether to keep the response file after execution
+      -h | --help                      : Show this help message and exit.
+      -v | --version                   : Show version and exit.
+      -c | --context                   : Show current Ollama context (history) and exit.
+      -r | --reset                     : Reset history before executing (fresh new session) and exit.
+      -m | --models                    : List available Ollama models and exit.
+      -s | --select-model [model_name] : Select the Ollama model to use.
+      -k | --keep                      : Keep the response file after execution.
 
     arguments:
-      question         the question to ask Ollama
-"
+      question                         : The prompt to ask Ollama.
+
+    examples:
+      Ask a question using the current model:
+        => ${APP_NAME} ${PLUGIN_NAME} "Summarize the release notes"
+      Show available models:
+        => ${APP_NAME} ${PLUGIN_NAME} --models
+      Reset history before asking:
+        => ${APP_NAME} ${PLUGIN_NAME} --reset "List my pending tasks"
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - When piped input is provided, it is used as context for the question.
+USAGE
 
 # Read context from ollama history file if not piped
 [[ "${IS_PIPED}" -ne 1 && -s "${HHS_OLLAMA_HISTORY_FILE}" ]] && \

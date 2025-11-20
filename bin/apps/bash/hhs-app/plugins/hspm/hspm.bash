@@ -18,8 +18,8 @@ VERSION=0.9.2
 PLUGIN_NAME="hspm"
 
 # Usage message
-USAGE="
-usage: $PLUGIN_NAME [option] {install,uninstall,list,recover}
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} {install|uninstall|list|recover} [options]
 
  _   _ ____  ____  __  __
 | | | / ___||  _ \|  \/  |
@@ -27,22 +27,37 @@ usage: $PLUGIN_NAME [option] {install,uninstall,list,recover}
 |  _  |___) |  __/| |  | |
 |_| |_|____/|_|   |_|  |_|
 
-  HomeSetup package manager
+  HomeSetup package manager.
 
     options:
-      -v  |   --version     : Display current program version.
-      -h  |      --help     : Display this help message.
+      -v | --version               : Display current program version.
+      -h | --help                  : Display this help message.
+      -e                           : (recover) Open the recovery file with the default editor.
+      -i                           : (recover) Install all recovered packages instead of listing.
+      -t                           : (recover) Use ${HHS_DEV_TOOLS} as the source for recovery.
 
     arguments:
-      list                  : List all available, OS based, installation recipes.
-      install   <package>   : Install packages using a matching installation recipe.
-      uninstall <package>   : Uninstall packages using a matching uninstallation recipe.
-      recover [-i,-t,-e]    : Install or list all packages previously installed by hspm. If -i is provided, then hspm
-                              will attempt to install all packages, otherwise the list is displayed. If -t is provided
-                              hspm will check \${HHS_DEV_TOOLS} instead of previously installed packages. If -e is
-                              provided, then the default editor will open the recovery file.
+      list                         : List all available OS-based installation recipes.
+      install <package...>         : Install packages using matching recipes.
+      uninstall <package...>       : Uninstall packages using matching recipes.
+      recover                      : Recover packages previously installed by hspm.
 
-"
+    examples:
+      Install a package recipe:
+        => ${APP_NAME} ${PLUGIN_NAME} install fzf
+      Recover and reinstall previous tools:
+        => ${APP_NAME} ${PLUGIN_NAME} recover -i
+      Inspect the recovery list without changes:
+        => ${APP_NAME} ${PLUGIN_NAME} recover
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Package manager detection relies on common managers (brew, apt, yum, dnf, apk).
+USAGE
 
 UNSETS=(
   help version cleanup execute cleanup_recipes

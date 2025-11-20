@@ -18,29 +18,37 @@ VERSION="1.1.0"
 APP_NAME="$(basename "$0")"
 
 # Help message to be displayed by the application.
-USAGE="usage: ${APP_NAME} [options] <method> <url>
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} <method> <url> [options]
+    Fetch a URL using curl with optional headers, body, and formatting.
 
-  Fetch URL resource using the most commons ways.
+    options:
+      -b | --body <json_body>       : HTTP request body (payload).
+      -f | --format                 : Pretty-print JSON responses when possible.
+      -H | --headers <headers>      : Comma-separated HTTP request headers.
+      -s | --silent                 : Omit informational messages.
+      -t | --timeout <seconds>      : Request timeout (default: 3).
+      -h | --help                   : Display this help message.
+      -v | --version                : Print version information.
 
-    Arguments:
+    arguments:
+      method                        : HTTP method [GET, HEAD, POST, PUT, PATCH, DELETE].
+      url                           : Target URL for the request.
 
-        method                      : The http method to be used [ GET, HEAD, POST, PUT, PATCH, DELETE ].
-        url                         : The url to make the request.
+    examples:
+      Fetch a page silently and format JSON:
+        => ${APP_NAME} -s -f GET https://example.com
+      Send JSON payload with custom header:
+        => ${APP_NAME} --headers "Accept: application/json" --body '{"x":1}' POST https://api.site.com
 
-    Options:
-        -b, --body <json_body>      : The http request body (payload).
-        -f, --format                : Pretty-print the JSON response when possible.
-        -H, --headers <headers>     : Comma-separated http request headers.
-        -s, --silent                : Omits all informational messages.
-        -t, --timeout <seconds>     : Request timeout (default: 3).
-        -h, --help                  : Display help message and quit.
-        -v, --version               : Print version information and quit.
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
 
-  Examples:
-    ${APP_NAME} -s -f GET https://example.com
-    ${APP_NAME} --headers \"Accept: application/json\" POST --body '{\"x\":1}' https://api.site.com
-
-"
+  Notes:
+    - The request is executed with curl and honors the provided timeout.
+USAGE
 
 # Functions to be unset after quit.
 UNSETS=(

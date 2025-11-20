@@ -17,12 +17,35 @@ VERSION=2.0.0
 APP_NAME="$(basename "$0")"
 
 # Help message to be displayed by the application.
-USAGE="usage: ${APP_NAME} [Options] <ip_address>
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} <ip_address> [options]
+    Validate an IPv4 address and display class, scope, and optional details.
 
-    Options:
-      -q | --quiet  : Silent mode. Do not check for IP details.
-      -i | --info   : Fetch additional information from the web.
-"
+    options:
+      -q | --quiet            : Validate only; skip scope/class details.
+      -i | --info             : Fetch additional information from the web.
+      -h | --help             : Display this help message.
+      -v | --version          : Display current program version.
+
+    arguments:
+      ip_address              : IPv4 address to validate.
+
+    examples:
+      Validate an address:
+        => ${APP_NAME} 192.168.0.1
+      Validate quietly:
+        => ${APP_NAME} --quiet 10.0.0.5
+      Validate and fetch external info:
+        => ${APP_NAME} --info 8.8.8.8
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Private/public scope detection follows standard IPv4 ranges.
+USAGE
 
 # Functions to be unset after quit
 UNSETS=(main check_class check_scope check_valid parse_args)
