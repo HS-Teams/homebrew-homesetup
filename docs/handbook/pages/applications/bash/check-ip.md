@@ -30,11 +30,14 @@
 ## Check-IP
 
 ```bash
-usage:  [Options] <ip_address>
+usage: check-ip.bash <ip_address> [options]
+    Validate an IPv4 address and display class, scope, and optional details.
 
-    Options:
-      -q | --quiet  : Silent mode. Do not check for IP details.
-      -i | --info   : Fetch additional information from the web.
+    options:
+      -q | --quiet            : Validate only; skip scope/class details.
+      -i | --info             : Fetch additional information from the web.
+      -h | --help             : Display this help message.
+      -v | --version          : Display current program version.
 ```
 
 ### **Purpose**

@@ -54,18 +54,27 @@ N/A
 **Output**
 
 ```bash
-usage: hhs <question>
+usage: hhs ask <question> [options]
 
     _        _
    / \   ___| | __
   / _ \ / __| |/ /
  / ___ \__ \   <
-/_/   \_\___/_|\_\
+/_/   \_\___/_|\_\...Ollama-AI
 
-  HomeSetup AI integration <version>.
+  Offline ollama-AI agent integration for HomeSetup.
+
+    options:
+      -h | --help                      : Show this help message and exit.
+      -v | --version                   : Show version and exit.
+      -c | --context                   : Show current Ollama context (history) and exit.
+      -r | --reset                     : Reset history before executing (fresh new session) and exit.
+      -m | --models                    : List available Ollama models and exit.
+      -s | --select-model [model_name] : Select the Ollama model to use.
+      -k | --keep                      : Keep the response file after execution.
 
     arguments:
-      question    : the question to make to the AI about HomeSetup.
+      question                         : The prompt to ask Ollama.
 ```
 
 ### "version"
