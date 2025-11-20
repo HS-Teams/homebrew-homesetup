@@ -24,7 +24,8 @@ UNSETS+=(
 VERSION="1.1.0 built on HomeSetup v${HHS_VERSION}"
 
 # Help message to be displayed by the application.
-USAGE="usage: ${APP_NAME} [option] {function | plugin {task} <command>} [args...]
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} {function | plugin {task} <command>} [args...] [options]
 
  _   _                      ____       _
 | | | | ___  _ __ ___   ___/ ___|  ___| |_ _   _ _ __
@@ -35,28 +36,34 @@ USAGE="usage: ${APP_NAME} [option] {function | plugin {task} <command>} [args...
 
   HomeSetup Application Manager v${VERSION}.
 
-    Arguments:
-      args              : Plugin command arguments will depend on the plugin. May be mandatory
-                          or not.
+    options:
+      -v | --version             : Display current program version.
+      -h | --help                : Display this help message.
+      -p | --prefix              : Display the HomeSetup installation directory.
 
-    Options:
-      -v  |  --version  : Display current program version.
-      -h  |     --help  : Display this help message.
-      -p  |   --prefix  : Display the HomeSetup installation directory.
+    arguments:
+      function                   : Execute a built-in hhs function.
+      plugin                     : Plugin name to invoke.
+      task                       : Plugin task such as help, version, or execute.
+      command                    : Command to run within the plugin.
+      args                       : Command arguments (plugin-specific).
 
-    Tasks:
-      help              : Display a help about the plugin.
-      version           : Display current plugin version.
-      execute           : Execute a plugin command.
+    examples:
+      List available plugins and functions:
+        => ${APP_NAME} list
+      Execute a plugin command:
+        => ${APP_NAME} plugin updater execute check
+      Show plugin-specific help:
+        => ${APP_NAME} plugin ask help
 
-    Exit Status:
-      (0) Success.
-      (1) Failure due to missing/wrong client input or similar issues.
-      (2) Failure due to program/plugin execution failures.
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program/plugin execution failures
 
   Notes:
     - To discover which plugins and functions are available type: ${APP_NAME} list.
-"
+USAGE
 
 # Directory containing all HHS plug-ins.
 PLUGINS_DIR="$(dirname "${0//${HHS_DIR}/$HHS_HOME}")/apps/${HHS_MY_SHELL}/hhs-app/plugins"

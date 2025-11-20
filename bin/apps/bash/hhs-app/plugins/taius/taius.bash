@@ -21,7 +21,8 @@ UNSETS=(
 )
 
 # Usage message
-USAGE="usage: ${APP_NAME} <question>
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
  _____     _
 |_   _|_ _(_)_   _ ___
@@ -31,9 +32,25 @@ USAGE="usage: ${APP_NAME} <question>
 
   HomeSetup AskAI integration v${VERSION}.
 
+    options:
+      -h | --help              : Display this help message.
+      -v | --version           : Display current plugin version.
+
     arguments:
-      question    : the question to make to Taius about HomeSetup.
-"
+      question                 : The question to ask Taius about HomeSetup.
+
+    examples:
+      Ask for usage guidance:
+        => ${APP_NAME} ${PLUGIN_NAME} "How do I update HomeSetup?"
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Requires the HomeSetup Python virtual environment and AskAI installation.
+USAGE
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 

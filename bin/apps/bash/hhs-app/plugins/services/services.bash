@@ -22,7 +22,8 @@ UNSETS=(
 VERSION="1.0.0"
 
 # Usage message
-USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name]
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name] [options]
                      _
  ___  ___ _ ____   _(_) ___ ___  ___
 / __|/ _ \\ '__\\ \\ / / |/ __/ _ \\/ __|
@@ -31,12 +32,28 @@ USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name]
 
   HomeSetup services v${VERSION}.
 
-    operations:
-      start     : Start a service.
-      stop      : Stop a service.
-      restart   : Restart a service.
-      status    : Check the status of a service or all services.
-"
+    options:
+      -h | --help               : Display this help message.
+      -v | --version            : Display current plugin version.
+
+    arguments:
+      operation                 : start | stop | restart | status.
+      service_name              : Target service (required except when listing all statuses).
+
+    examples:
+      Check status for all services:
+        => ${APP_NAME} ${PLUGIN_NAME} status
+      Restart a specific service:
+        => ${APP_NAME} ${PLUGIN_NAME} restart sshd
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Commands adapt to the current OS service manager (brew, rc-service, systemctl).
+USAGE
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 

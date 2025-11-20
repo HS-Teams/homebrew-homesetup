@@ -21,15 +21,31 @@ IFS=$'\n'
 read -r -d '' -a images < <(find "${HHS_HOME}/docker" -mindepth 1 -type d -exec basename {} \;)
 IFS="${OLDIFS}"
 
-USAGE="
-usage: usage: ${APP_NAME} [Options] <image_type..>
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} <image_type...> [options]
+    Build HomeSetup docker images with buildx (arm64 and amd64).
 
-  Options
-    -p | --push   : Push the image after a successful build
+    options:
+      -p | --push             : Push images after a successful build.
+      -h | --help             : Display this help message.
 
-  Arguments
-    - image_type  : The images to be installed. One or more of [${images[*]}]
-"
+    arguments:
+      image_type              : One or more images to build from [${images[*]}].
+
+    examples:
+      Build specific images locally:
+        => ${APP_NAME} base dev
+      Build and push all images:
+        => ${APP_NAME} --push ${images[*]}
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Images are tagged as yorevs/hhs-<image>-<arch>:latest using docker buildx.
+USAGE
 
 declare -a platforms
 

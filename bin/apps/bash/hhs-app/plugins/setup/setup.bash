@@ -22,7 +22,8 @@ UNSETS=(
 VERSION="1.0.13"
 
 # Usage message
-USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [-restore]
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} [-restore] [options]
 
  ____       _
 / ___|  ___| |_ _   _ _ __
@@ -34,8 +35,27 @@ USAGE="usage: ${APP_NAME} ${PLUGIN_NAME} [-restore]
   HomeSetup initialization setup v${VERSION}.
 
     options:
-      -restore    : Restore HomeSetup defaults.
-"
+      -restore                 : Restore HomeSetup defaults.
+      -h | --help              : Display this help message.
+      -v | --version           : Display current plugin version.
+
+    arguments:
+      (none)                   : Launch interactive setup selection.
+
+    examples:
+      Restore default settings:
+        => ${APP_NAME} ${PLUGIN_NAME} -restore
+      Review setup options interactively:
+        => ${APP_NAME} ${PLUGIN_NAME}
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Settings are stored in homesetup.toml under the setup section.
+USAGE
 
 # Regex to match a setting.
 RE_PROPERTY="^([a-zA-Z0-9_.]+) *= *(.*)"

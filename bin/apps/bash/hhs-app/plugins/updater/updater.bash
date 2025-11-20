@@ -18,8 +18,8 @@ VERSION=0.9.0
 PLUGIN_NAME="updater"
 
 # Usage message
-USAGE="
-usage: ${PLUGIN_NAME} ${PLUGIN_NAME} [option] {check,update,stamp}
+read -r -d '' USAGE <<USAGE
+usage: ${APP_NAME} ${PLUGIN_NAME} {check|update|stamp} [options]
 
  _   _           _       _
 | | | |_ __   __| | __ _| |_ ___ _ __
@@ -30,11 +30,29 @@ usage: ${PLUGIN_NAME} ${PLUGIN_NAME} [option] {check,update,stamp}
 
   HomeSetup update manager.
 
+    options:
+      -h | --help                : Display this help message.
+      -v | --version             : Display current plugin version.
+
     arguments:
-      check             : Fetch the last_update timestamp and check if HomeSetup needs to be updated.
-      update            : Check for HomeSetup updates.
-      stamp             : Stamp the next auto-update check for 7 days ahead.
-"
+      check                      : Fetch the last_update timestamp and report if HomeSetup needs to update.
+      update                     : Check for updates and apply them.
+      stamp                      : Stamp the next auto-update check for 7 days ahead.
+
+    examples:
+      Check whether updates are available:
+        => ${APP_NAME} ${PLUGIN_NAME} check
+      Run an update:
+        => ${APP_NAME} ${PLUGIN_NAME} update
+
+    exit status:
+      (0) Success
+      (1) Failure due to missing/wrong client input or similar issues
+      (2) Failure due to program execution failures
+
+  Notes:
+    - Update checks compare the installed version with the repository .VERSION file.
+USAGE
 
 UNSETS=(
   help version cleanup execute update_hhs stamp_next_update is_updated update_check do_update
