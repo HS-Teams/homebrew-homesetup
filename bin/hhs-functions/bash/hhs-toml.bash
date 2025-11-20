@@ -107,6 +107,7 @@ __hhs_toml__group_selector() {
 function __hhs_toml_get() {
 
   local file="${1}" key="${2}" group="${3}" line trimmed current_group="" in_target=0
+  local candidate_key candidate_value
 
   if [[ "${#}" -eq 0 || "${1}" == '-h' || "${1}" == '--help' ]]; then
     echo "usage: __hhs_toml_get <file> <key> [group]"
@@ -154,8 +155,8 @@ function __hhs_toml_get() {
     fi
 
     if [[ ${trimmed} =~ ^([^=]+)=(.*)$ ]]; then
-      local candidate_key="$(__hhs_toml__normalize_key "${BASH_REMATCH[1]}")"
-      local candidate_value="$(__hhs_toml__trim "${BASH_REMATCH[2]}")"
+      candidate_key="$(__hhs_toml__normalize_key "${BASH_REMATCH[1]}")"
+      candidate_value="$(__hhs_toml__trim "${BASH_REMATCH[2]}")"
       if [[ "${candidate_key}" == "${key}" ]]; then
         printf '%s=%s\n' "${candidate_key}" "${candidate_value}"
         return 0
@@ -173,6 +174,8 @@ function __hhs_toml_get() {
 function __hhs_toml_set() {
 
   local file="${1}" assignment="${2}" group="${3}" key value temp_file
+  local candidate_key raw_line clean_line trimmed_line
+  local line current_group="" group_found=0 key_updated=0 in_target=0
 
   if [[ "${#}" -eq 0 || "${1}" == '-h' || "${1}" == '--help' ]]; then
     echo "usage: __hhs_toml_set <file> <key=value> [group]"
@@ -201,11 +204,10 @@ function __hhs_toml_set() {
   temp_file="${file}.tmp"
   : >"${temp_file}"
 
-  local line current_group="" group_found=0 key_updated=0 in_target=0
   while IFS= read -r line || [[ -n "${line}" ]]; do
-    local raw_line="${line%$'\r'}"
-    local clean_line="$(__hhs_toml__strip_comments "${raw_line}")"
-    local trimmed_line="$(__hhs_toml__trim "${clean_line}")"
+    raw_line="${line%$'\r'}"
+    clean_line="$(__hhs_toml__strip_comments "${raw_line}")"
+    trimmed_line="$(__hhs_toml__trim "${clean_line}")"
 
     if [[ ${trimmed_line} =~ ^\[.*\] ]]; then
       if [[ ${key_updated} -eq 0 && -n "${group}" && ${in_target} -eq 1 ]]; then
@@ -223,13 +225,12 @@ function __hhs_toml_set() {
       else
         in_target=0
       fi
-
       printf '%s\n' "${raw_line}" >>"${temp_file}"
       continue
     fi
 
     if [[ ${trimmed_line} =~ ^([^=]+)=(.*)$ ]]; then
-      local candidate_key="$(__hhs_toml__normalize_key "${BASH_REMATCH[1]}")"
+      candidate_key="$(__hhs_toml__normalize_key "${BASH_REMATCH[1]}")"
       if { [[ -z "${group}" && -z "${current_group}" ]] || [[ ${in_target} -eq 1 ]]; } && [[ "${candidate_key}" == "${key}" ]]; then
         printf '%s = %s\n' "${key}" "${value}" >>"${temp_file}"
         key_updated=1
@@ -248,7 +249,8 @@ function __hhs_toml_set() {
     fi
   fi
 
-  mv "${temp_file}" "${file}"
+  mv -f "${temp_file}" "${file}" &> /dev/null || return 1
+
   return 0
 }
 
@@ -294,8 +296,10 @@ function __hhs_toml_groups() {
 # @param $2 [Opt] : The group to get the keys from (root if not provided).
 function __hhs_toml_keys() {
 
-  local file="${1}" group="${2}" count=0 line current_group=""
-  local re_group="$(__hhs_toml__group_selector "${group}")"
+  local file="${1}" group="${2}" count=0 line current_group="" re_group
+  local raw_line clean_line trimmed_line
+
+  re_group="$(__hhs_toml__group_selector "${group}")"
 
   if [[ "${#}" -eq 0 || "${1}" == '-h' || "${1}" == '--help' ]]; then
     echo "usage: __hhs_toml_keys <file> [group]"
@@ -311,13 +315,11 @@ function __hhs_toml_keys() {
   fi
 
   while IFS= read -r line || [[ -n "${line}" ]]; do
-    local raw_line="${line%$'\r'}"
-    local clean_line="$(__hhs_toml__strip_comments "${raw_line}")"
-    local trimmed_line="$(__hhs_toml__trim "${clean_line}")"
+    raw_line="${line%$'\r'}"
+    clean_line="$(__hhs_toml__strip_comments "${raw_line}")"
+    trimmed_line="$(__hhs_toml__trim "${clean_line}")"
 
-    if [[ -z "${trimmed_line}" ]]; then
-      continue
-    fi
+    [[ -z "${trimmed_line}" ]] && continue
 
     if [[ ${trimmed_line} =~ ^\[.*\] ]]; then
       if [[ ${trimmed_line} =~ ${re_group} ]]; then

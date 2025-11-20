@@ -238,16 +238,15 @@ function __hhs_shopt() {
     if \shopt "${enable}" "${option}"; then
       read -r option enable < <(\shopt "${option}" | awk '{print $1, $2}')
       [[ 'off' == "${enable}" ]] && color="${RED}"
-      __hhs_toml_set "${HHS_SHOPTS_FILE}" "${option}=${enable}" &&
-        {
-          echo -e "${WHITE}Shell option ${CYAN}${option}${WHITE} set to ${color:-${GREEN}}${enable} ${NC}"
-          return 0
-        }
+      __hhs_toml_set "${HHS_SHOPTS_FILE}" "${option}=${enable}" && {
+        echo -e "${WHITE}Shell option ${CYAN}${option}${WHITE} set to ${color:-${GREEN}}${enable} ${NC}"
+        return 0
+      }
     fi
   else
     \shopt "${@}" 2>/dev/null && return 0
     [[ "${enable}" == '-q' ]] && return 1
-    __hhs_errcho "${FUNCNAME[0]}" "${enable}: invalid option"
+    __hhs_errcho "${FUNCNAME[0]}" "${enable}: invalid shell option"
   fi
 
   return 1

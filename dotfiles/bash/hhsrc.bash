@@ -144,7 +144,8 @@ while read -r pref; do
   fi
 done <"${HHS_SETUP_FILE}"
 
-# !!!Settings are available as environment variables from this point.!!!
+# -----------------------------------------------------------------------------------
+# Settings (homesetup.toml) are available as environment variables from this point
 
 # Add custom paths to the system `$PATH`.
 if [[ -f "${HHS_DIR}/.path" ]]; then
@@ -155,16 +156,19 @@ if [[ -f "${HHS_DIR}/.path" ]]; then
   done
 fi
 
+# Input method resources
 if ! [[ -s "${HHS_INPUTRC}" ]]; then
   __hhs_log "WARN" "'.inputrc' file was copied because it was not found at: ${HOME}"
   \cp "${HHS_HOME}/dotfiles/inputrc" "${HHS_INPUTRC}"
 fi
 
+# Alias definitions
 if ! [[ -s "${HHS_ALIASDEF}" ]]; then
   __hhs_log "WARN" "'.aliasdef' file was copied because it was not found at: ${HHS_DIR}"
   \cp "${HHS_HOME}/dotfiles/aliasdef" "${HHS_ALIASDEF}"
 fi
 
+# -----------------------------------------------------------------------------------
 # Initialize HomeSetup key bindings.
 if ! [[ -s "${HHS_KEY_BINDINGS}" ]]; then
   __hhs_log "WARN" "'${HHS_KEY_BINDINGS}' file was copied because it was not found at: ${HHS_DIR}"
@@ -177,6 +181,7 @@ else
   __hhs_log "WARN" "Key bindings failed to load: ${HHS_KEY_BINDINGS}"
 fi
 
+# -----------------------------------------------------------------------------------
 # Set system locale variables (defaults)
 if [[ ${HHS_SET_LOCALES} -eq 1 ]]; then
   export LANGUAGE=${LANGUAGE:-en_US:en}
@@ -190,8 +195,11 @@ if [[ ${HHS_SET_LOCALES} -eq 1 ]]; then
     export LC_NUMERIC=${LC_NUMERIC:-${LANG}}
     export LC_TIME=${LC_TIME:-${LANG}}
   fi
+else
+  __hhs_log "WARN" "Set system locales were disabled !"
 fi
 
+# -----------------------------------------------------------------------------------
 # Initialize Ble-sh plug-in if it's enabled.
 if [[ ${HHS_USE_BLESH} -eq 1 ]]; then
   __hhs_log "INFO" "Loading Ble-sh plug-in"
@@ -200,6 +208,7 @@ else
   __hhs_log "WARN" "Ble-sh initialization was disabled !"
 fi
 
+# -----------------------------------------------------------------------------------
 # Activate HomeSetup Python venv.
 if [[ ${HHS_PYTHON_VENV_ENABLED} -eq 1 ]]; then
   __hhs_log "DEBUG" "Activating python virtual environment"
@@ -211,6 +220,28 @@ if [[ ${HHS_PYTHON_VENV_ENABLED} -eq 1 ]]; then
   fi
 else
   __hhs_log "WARN" "HomeSetup Python venv auto-activation was disabled !"
+fi
+
+# -----------------------------------------------------------------------------------
+# Set/Unset the shell options
+if [[ ${HHS_LOAD_SHELL_OPTIONS} -eq 1 ]]; then
+  if [[ ! -s "${HHS_SHOPTS_FILE}" ]]; then
+    \shopt | awk '{print $1" = "$2}' >"${HHS_SHOPTS_FILE}" ||
+       __hhs_log "ERROR" "Unable to create the Shell Options file !"
+  fi
+  re_key_pair="^([a-zA-Z0-9]*) *= *([Oo][Nn]|[Oo][Ff][Ff])$"
+  while read -r line; do
+    if [[ ${line} =~ ${re_key_pair} ]]; then
+      option="${BASH_REMATCH[1]}"
+      state="${BASH_REMATCH[2]}"
+      if [[ "${state}" == 'on' ]]; then
+        \shopt -s "${option}" &>/dev/null || __hhs_log "WARN" "Unable to SET shell option: ${option}"
+      elif [[ "${state}" == 'off' ]]; then
+        \shopt -u "${option}" &>/dev/null || __hhs_log "WARN" "Unable to UNSET shell option: ${option}"
+      fi
+    fi
+  done <"${HHS_SHOPTS_FILE}"
+  __hhs_log "INFO" "Shell options are set !"
 fi
 
 # -----------------------------------------------------------------------------------
@@ -251,27 +282,6 @@ for file in "${CUSTOM_DOTFILES[@]}"; do
     __hhs_log "WARN" "Skipped custom dotfile :: Not found -> ${f_path}"
   fi
 done
-
-# Set/Unset the shell options
-if [[ ${HHS_LOAD_SHELL_OPTIONS} -eq 1 ]]; then
-  if [[ ! -s "${HHS_SHOPTS_FILE}" ]]; then
-    \shopt | awk '{print $1" = "$2}' >"${HHS_SHOPTS_FILE}" ||
-       __hhs_log "ERROR" "Unable to create the Shell Options file !"
-  fi
-  re_key_pair="^([a-zA-Z0-9]*) *= *([Oo][Nn]|[Oo][Ff][Ff])$"
-  while read -r line; do
-    if [[ ${line} =~ ${re_key_pair} ]]; then
-      option="${BASH_REMATCH[1]}"
-      state="${BASH_REMATCH[2]}"
-      if [[ "${state}" == 'on' ]]; then
-        \shopt -s "${option}" &>/dev/null || __hhs_log "WARN" "Unable to SET shell option: ${option}"
-      elif [[ "${state}" == 'off' ]]; then
-        \shopt -u "${option}" &>/dev/null || __hhs_log "WARN" "Unable to UNSET shell option: ${option}"
-      fi
-    fi
-  done <"${HHS_SHOPTS_FILE}"
-  __hhs_log "INFO" "Shell options are set !"
-fi
 
 # Load system settings using setman.
 if [[ ${HHS_EXPORT_SETTINGS} -eq 1 ]] && __hhs_is_venv; then
@@ -381,6 +391,13 @@ fi
 PATH=$(awk -F: '{for (i=1;i<=NF;i++) { if ( !x[$i]++ ) printf("%s:",$i); }}' <<<"${PATH}")
 export PATH
 
+# Bash hooks
+function command_not_found_handle() {
+  __hhs_errcho "bash" "Command not found: \"\033[9m${1}\033[m\""
+  echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1', 'which $1' or ask 'Command not found: \"${1}\"' for help.${NC}"
+  return 127
+}
+
 # Print HomeSetup MOTDs.
 if [[ -d "${HHS_MOTD_DIR}" ]]; then
   all=$(find "${HHS_MOTD_DIR}" -type f | sort | uniq)
@@ -388,13 +405,6 @@ if [[ -d "${HHS_MOTD_DIR}" ]]; then
     echo -e "$(eval "echo -e \"$(<"${motd}")\"")"
   done
 fi
-
-# Bash hooks
-function command_not_found_handle() {
-  __hhs_errcho "bash" "Command not found: \"\033[9m${1}\033[m\""
-  echo -e "\n${YELLOW}${TIP_ICON} Tip: Try 'type $1', 'which $1' or ask 'Command not found: \"${1}\"' for help.${NC}"
-  return 127
-}
 
 finished="$(${PYTHON3} -c 'import time; print(int(time.time() * 1000))')"
 diff_time=$((finished - started))

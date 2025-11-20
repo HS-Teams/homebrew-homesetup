@@ -164,6 +164,8 @@ else
     else
       __hhs_log "ERROR" "Starship failed to start!"
     fi
+  else
+    __hhs_log "WARN" "Starship prompt initialization was disabled !"
   fi
 
   # If Starship did not start, configure classic HomeSetup prompt.
