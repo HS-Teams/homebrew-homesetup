@@ -29,6 +29,7 @@ With **HomeSetup**, you can enhance your terminal experience, boost productivity
 - For the full documentation, access the [HomeSetup usage manual](docs/USAGE.md).
 
 **🔥 HOT** AI is here ! **HomeSetup** has integrated AI with RAG capabilities.
+**🔥 HOT** [Ollama-AI](README.md#integrations) is here ! **HomeSetup** has integrated Ollama-AI with Offline capabilities.
 
 <img src="https://iili.io/dy2Ga6u.gif" alt="hhs-ai-demo" />
 
