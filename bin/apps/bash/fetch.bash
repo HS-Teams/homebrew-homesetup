@@ -18,7 +18,7 @@ VERSION="1.1.0"
 APP_NAME="$(basename "$0")"
 
 # Help message to be displayed by the application.
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} <method> <url> [options]
     Fetch a URL using curl with optional headers, body, and formatting.
 
@@ -48,7 +48,8 @@ usage: ${APP_NAME} <method> <url> [options]
 
   Notes:
     - The request is executed with curl and honors the provided timeout.
-USAGE
+
+EOF
 
 # Functions to be unset after quit.
 UNSETS=(

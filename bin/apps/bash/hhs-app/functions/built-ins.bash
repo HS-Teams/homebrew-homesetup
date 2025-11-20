@@ -261,8 +261,7 @@ function reset() {
     while read -r -d ' ' file; do
       echo -en "${HHS_HIGHLIGHT_COLOR}Deleting file ${WHITE}"
       echo -n "${file} $(printf '\056%.0s' {1..60})" | head -c 60
-      # shellcheck disable=SC2086
-      if \rm -f ${file} &> /dev/null; then
+      if \rm -f "${file}" &> /dev/null; then
         echo -e "${WHITE}${GREEN} OK${NC}"
       else
         echo -e "${WHITE}${RED} FAILED${NC}"

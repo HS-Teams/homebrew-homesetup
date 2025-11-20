@@ -19,7 +19,7 @@ APP_NAME="${APP_NAME:-${0##*/}}"
 
 # Help message to be displayed by the application.
 if [[ -z "${USAGE:-}" ]]; then
-  read -r -d '' USAGE <<USAGE
+  read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} <arguments> [options]
     Common application helpers for HomeSetup scripts.
 
@@ -39,9 +39,7 @@ usage: ${APP_NAME} <arguments> [options]
       (1) Failure due to missing/wrong client input or similar issues
       (2) Failure due to program execution failures
 
-  Notes:
-    - This usage is injected into applications that source app-commons.bash.
-USAGE
+EOF
 fi
 
 # Default identifiers to be unset
@@ -86,6 +84,7 @@ function quit() {
 
   [[ ${exit_code} -ne 0 && -n "${msg}" ]] && __hhs_errcho "${APP_NAME}" "${msg}${NC}\n" 1>&2
   [[ ${exit_code} -eq 0 && -n "${msg}" ]] && echo -e "${msg} \n" 1>&2
+
   exit "${exit_code}"
 }
 
@@ -94,9 +93,9 @@ function quit() {
 # @param $2 [Opt] : The exit message to be displayed.
 function usage() {
 
-  local exit_code=${1:-0}
+  local exit_code=${1:-1}
 
-  shift && echo -en "${USAGE}"
+  shift && echo -e "${USAGE}"
   [[ ${#} -gt 0 ]] && echo ''
   quit "${exit_code}" "$@"
 }

@@ -110,5 +110,5 @@ teardown() {
 @test "when-handle-invalid-options-gracefully" {
   run __hhs_shopt -z
   assert_failure
-  assert_output --partial "-z: invalid option"
+  assert_output --partial "-z: invalid shell option"
 }

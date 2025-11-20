@@ -51,6 +51,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
   Notes:
     - Requires the HomeSetup Python virtual environment and AskAI installation.
+
 EOF
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"

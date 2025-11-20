@@ -82,6 +82,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} [command] [options]
 
   Notes:
     - If no command is passed, the default editor opens the starship configuration file.
+
 EOF
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"

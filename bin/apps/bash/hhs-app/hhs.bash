@@ -24,7 +24,7 @@ UNSETS+=(
 VERSION="1.1.0 built on HomeSetup v${HHS_VERSION}"
 
 # Help message to be displayed by the application.
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} {function | plugin {task} <command>} [args...] [options]
 
  _   _                      ____       _
@@ -63,7 +63,8 @@ usage: ${APP_NAME} {function | plugin {task} <command>} [args...] [options]
 
   Notes:
     - To discover which plugins and functions are available type: ${APP_NAME} list.
-USAGE
+
+EOF
 
 # Directory containing all HHS plug-ins.
 PLUGINS_DIR="$(dirname "${0//${HHS_DIR}/$HHS_HOME}")/apps/${HHS_MY_SHELL}/hhs-app/plugins"

@@ -56,6 +56,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} [-restore] [options]
 
   Notes:
     - Settings are stored in homesetup.toml under the setup section.
+
 EOF
 
 # Regex to match a setting.

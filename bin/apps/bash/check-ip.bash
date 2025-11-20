@@ -17,7 +17,7 @@ VERSION=2.0.0
 APP_NAME="$(basename "$0")"
 
 # Help message to be displayed by the application.
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} <ip_address> [options]
     Validate an IPv4 address and display class, scope, and optional details.
 
@@ -45,7 +45,8 @@ usage: ${APP_NAME} <ip_address> [options]
 
   Notes:
     - Private/public scope detection follows standard IPv4 ranges.
-USAGE
+
+EOF
 
 # Functions to be unset after quit
 UNSETS=(main check_class check_scope check_valid parse_args)

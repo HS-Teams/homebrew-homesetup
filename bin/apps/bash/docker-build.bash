@@ -21,7 +21,7 @@ IFS=$'\n'
 read -r -d '' -a images < <(find "${HHS_HOME}/docker" -mindepth 1 -type d -exec basename {} \;)
 IFS="${OLDIFS}"
 
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} <image_type...> [options]
     Build HomeSetup docker images with buildx (arm64 and amd64).
 
@@ -45,7 +45,8 @@ usage: ${APP_NAME} <image_type...> [options]
 
   Notes:
     - Images are tagged as yorevs/hhs-<image>-<arch>:latest using docker buildx.
-USAGE
+
+EOF
 
 declare -a platforms
 

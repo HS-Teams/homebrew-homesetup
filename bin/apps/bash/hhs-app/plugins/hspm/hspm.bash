@@ -65,6 +65,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} {install|uninstall|list|recover} [options]
 
   Notes:
     - Package manager detection relies on common managers (brew, apt, yum, dnf, apk).
+
 EOF
 
 [[ -s "$HHS_DIR/bin/app-commons.bash" ]] && source "$HHS_DIR/bin/app-commons.bash"

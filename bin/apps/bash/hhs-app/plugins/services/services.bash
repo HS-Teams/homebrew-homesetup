@@ -54,6 +54,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name] [options]
 
   Notes:
     - Commands adapt to the current OS service manager (brew, rc-service, systemctl).
+
 EOF
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"

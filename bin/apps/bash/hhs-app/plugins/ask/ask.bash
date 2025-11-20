@@ -22,7 +22,7 @@ UNSETS=(
 )
 
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
     _        _
@@ -60,7 +60,8 @@ usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
   Notes:
     - When piped input is provided, it is used as context for the question.
-USAGE
+
+EOF
 
 # Read context from ollama history file if not piped
 [[ "${IS_PIPED}" -ne 1 && -s "${HHS_OLLAMA_HISTORY_FILE}" ]] && \
