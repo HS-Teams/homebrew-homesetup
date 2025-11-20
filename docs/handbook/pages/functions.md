@@ -9,30 +9,27 @@
 <!-- toc -->
 
 - [Standard Tools](#standard-tools)
-  - [General](functions/std-tools/general.md)
   - [Aliases Related](functions/std-tools/aliases-related.md)
   - [Built-ins](functions/std-tools/built-ins.md)
+  - [CLI Terminal Tools](functions/std-tools/clitt.md)
   - [Command Tool](functions/std-tools/command-tool.md)
   - [Directory Related](functions/std-tools/directory-related.md)
   - [File Related](functions/std-tools/file-related.md)
-  - [MChoose Tool](functions/std-tools/clitt.md)
-  - [MInput Tool](functions/std-tools/clitt.md)
-  - [MSelect Tool](functions/std-tools/clitt.md)
   - [Network Related](functions/std-tools/network-related.md)
   - [Paths Tool](functions/std-tools/paths-tool.md)
   - [Profile Related](functions/std-tools/profile-related.md)
-  - [Punch-Tool](functions/std-tools/punch-tool.md)
   - [Search Related](functions/std-tools/search-related.md)
   - [Security Related](functions/std-tools/security-related.md)
   - [Shell Utilities](functions/std-tools/shell-utilities.md)
   - [System Utilities](functions/std-tools/system-utilities.md)
   - [Taylor Tool](functions/std-tools/taylor-tool.md)
   - [Text Utilities](functions/std-tools/text-utilities.md)
+  - [TOML Utilities](functions/std-tools/toml-utilities.md)
   - [Tool checks](functions/std-tools/toolchecks.md)
 - [Development Tools](#development-tools)
-  - [Gradle](functions/dev-tools/gradle-tools.md)
   - [Docker](functions/dev-tools/docker-tools.md)
   - [Git](functions/dev-tools/git-tools.md)
+  - [Gradle](functions/dev-tools/gradle-tools.md)
 
 <!-- tocstop -->
 
