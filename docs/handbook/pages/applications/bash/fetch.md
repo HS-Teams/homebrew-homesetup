@@ -30,16 +30,17 @@
 ## Fetch
 
 ```bash
-usage:  <method> [options] <url>
+usage: fetch.bash <method> <url> [options]
+    Fetch a URL using curl with optional headers, body, and formatting.
 
-        method                      : The http method to be used \[ GET, POST, PUT, PATCH, DELETE \].
-        url                         : The url to make the request.
-
-    Options:
-        --headers <json_headers>    : The http request headers.
-        --body    <json_body>       : The http request body (payload).
-        --format                    : Format the json responseonse.
-        --silent                    : Omits all informational messages.
+    options:
+      -b | --body <json_body>       : HTTP request body (payload).
+      -f | --format                 : Pretty-print JSON responses when possible.
+      -H | --headers <headers>      : Comma-separated HTTP request headers.
+      -s | --silent                 : Omit informational messages.
+      -t | --timeout <seconds>      : Request timeout (default: 3).
+      -h | --help                   : Display this help message.
+      -v | --version                : Print version information.
 ```
 
 ### **Purpose**
