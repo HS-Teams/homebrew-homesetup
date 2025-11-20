@@ -18,6 +18,7 @@
       - [Tests](applications/bash/hhs-app/functions/tests.md)
       - [Web](applications/bash/hhs-app/functions/web.md)
     - [Plugins](applications/bash/hhs-app.md#plug-ins)
+      - [Ask](applications/bash/hhs-app/plugins/ask.md)
       - [Firebase](applications/bash/hhs-app/plugins/firebase.md)
       - [HSPM](applications/bash/hhs-app/plugins/hspm.md)
       - [Settings](applications/bash/hhs-app/plugins/settings.md)
