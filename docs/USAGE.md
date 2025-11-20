@@ -429,12 +429,20 @@ to explore and leverage their capabilities.
 
 | Plug-in  | Purpose                                                                  |
 |----------|--------------------------------------------------------------------------|
+| ask      | Offline Ollama AI chat with context history, model selection, and resets.|
 | settings | Terminal settings manager.                                               |
 | starship | Starship prompt manager.                                                 |
 | setup    | HomeSetup initialization manager.                                        |
 | updater  | Update manager for HomeSetup.                                            |
 | firebase | Manager for HomeSetup Firebase integration.                              |
 | hspm     | Manage your development tools using installation/uninstallation recipes. |
+
+Use the `__hhs ask` plug-in to chat with a local Ollama model, list available options, or manage history:
+
+- `__hhs ask --models` lists downloaded and available Ollama models.
+- `__hhs ask --select-model <name>` updates the preferred model stored in your HomeSetup configuration.
+- `__hhs ask --context` shows the current conversation history, and `--reset` clears it before a new session.
+- The plug-in will start (or offer to install) the Ollama service automatically when needed.
 
 ### HHS Functions
 
