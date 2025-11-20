@@ -14,15 +14,16 @@
 # Current plugin name
 PLUGIN_NAME="setup"
 
+# Current hhs setup version
+VERSION="1.0.13"
+
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute DEFAULT_SETTINGS RE_PROPERTY
 )
 
-# Current hhs setup version
-VERSION="1.0.13"
-
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} [-restore] [options]
 
  ____       _
@@ -55,7 +56,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} [-restore] [options]
 
   Notes:
     - Settings are stored in homesetup.toml under the setup section.
-USAGE
+EOF
 
 # Regex to match a setting.
 RE_PROPERTY="^([a-zA-Z0-9_.]+) *= *(.*)"

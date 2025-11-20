@@ -12,6 +12,7 @@
 # Current plugin name
 PLUGIN_NAME="settings"
 
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute
 )

@@ -10,12 +10,13 @@
 #
 # Copyright (c) 2025, HomeSetup team
 
-# Current script version.
-VERSION="1.0.0"
-
 # Current plugin name
 PLUGIN_NAME="ask"
 
+# Current script version.
+VERSION="1.0.0"
+
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute show_context clear_context show_models start_ollama select_ollama_model ensure_ollama
 )
@@ -28,7 +29,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
    / \\   ___| | __
   / _ \\ / __| |/ /
  / ___ \\__ \\   <
-/_/   \\_\\___/_|\\_\\...Ollama
+/_/   \\_\\___/_|\\_\\...Ollama-AI
 
   Offline ollama-AI agent integration for HomeSetup v${VERSION}.
 

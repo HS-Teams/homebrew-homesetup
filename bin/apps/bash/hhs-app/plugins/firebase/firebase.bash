@@ -13,6 +13,7 @@
 # Current plugin name
 PLUGIN_NAME="firebase"
 
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute args action db_alias dotfiles
 )

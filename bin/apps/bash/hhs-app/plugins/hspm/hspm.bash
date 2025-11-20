@@ -11,14 +11,22 @@
 #
 # Copyright (c) 2025, HomeSetup team
 
-# Current script version.
-VERSION=0.9.2
-
 # Current plugin name
 PLUGIN_NAME="hspm"
 
+# Current script version.
+VERSION=0.9.2
+
+# Namespace cleanup
+UNSETS=(
+  help version cleanup execute cleanup_recipes
+  uninstall_recipe list_recipes install_recipe
+  add_breadcrumb del_breadcrumb recover_packages
+  _install_ _uninstall_ _depends_ _which_
+)
+
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} {install|uninstall|list|recover} [options]
 
  _   _ ____  ____  __  __
@@ -57,14 +65,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} {install|uninstall|list|recover} [options]
 
   Notes:
     - Package manager detection relies on common managers (brew, apt, yum, dnf, apk).
-USAGE
-
-UNSETS=(
-  help version cleanup execute cleanup_recipes
-  uninstall_recipe list_recipes install_recipe
-  add_breadcrumb del_breadcrumb recover_packages
-  _install_ _uninstall_ _depends_ _which_
-)
+EOF
 
 [[ -s "$HHS_DIR/bin/app-commons.bash" ]] && source "$HHS_DIR/bin/app-commons.bash"
 

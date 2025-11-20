@@ -14,12 +14,13 @@
 # Current plugin name
 PLUGIN_NAME="starship"
 
+# Current hhs starship version
+VERSION="1.0.1"
+
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute add_hhs_preset
 )
-
-# Current hhs starship version
-VERSION="1.0.1"
 
 # All Starship presets
 STARSHIP_PRESETS=(
@@ -35,7 +36,7 @@ STARSHIP_PRESETS=(
 )
 
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} [command] [options]
 
  ____  _                 _     _
@@ -81,7 +82,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} [command] [options]
 
   Notes:
     - If no command is passed, the default editor opens the starship configuration file.
-USAGE
+EOF
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 
@@ -102,38 +103,18 @@ function cleanup() {
   echo -n ''
 }
 
-# @purpose: Opens the Starship configuration page
-function configs() {
-  local page_url="https://starship.rs/config/"
-
-  echo -e "${BLUE}${GLOBE_ICN} Opening Starship config page from: ${page_url}${ELLIPSIS_ICN}${NC}"
-  __hhs_open "${page_url}" && sleep 2 && quit 0
-
-  quit 1 "Failed to open url: \"${page_url}\" !"
-}
-
-
-# @purpose: Add HomeSetup presets.
-function add_hhs_presets() {
-
-  local hhs_presets
-
-  IFS=$'\n' read -r -d '' -a hhs_presets < <(find "${HHS_STARSHIP_PRESETS_DIR}" -type f -name "hhs-*.toml" -exec basename {} \;)
-  IFS="${OLDIFS}"
-  STARSHIP_PRESETS+=("${hhs_presets[@]}")
-}
-
 # @purpose: HHS plugin required function
 function execute() {
 
   local preset_val mselect_file title preset
 
+  [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]] && usage 0
+  [[ "$1" == "-v" || "$1" == "--version" ]] && version
+
   if __hhs_has starship; then
 
     [[ $# -eq 0 ]] || { list_contains "$@" "edit" && __hhs_open "${STARSHIP_CONFIG}" && quit 0; }
     [[ $# -eq 0 ]] || { list_contains "$@" "configs" && configs; }
-    list_contains "${*}" "help" && usage 0
-    list_contains "${*}" "version" && version
 
     if list_contains "${*}" "restore"; then
       echo -e "${GREEN}Restoring HomeSetup starship configuration...${NC}"
@@ -177,4 +158,26 @@ function execute() {
     echo -e "${ORANGE}Starship is not installed. You can install it by:"
     echo -e "${CYAN}$ curl -sS https://starship.rs/install.sh${NC}"
   fi
+}
+
+
+# @purpose: Opens the Starship configuration page
+configs() {
+  local page_url="https://starship.rs/config/"
+
+  echo -e "${BLUE}${GLOBE_ICN} Opening Starship config page from: ${page_url}${ELLIPSIS_ICN}${NC}"
+  __hhs_open "${page_url}" && sleep 2 && quit 0
+
+  quit 1 "Failed to open url: \"${page_url}\" !"
+}
+
+
+# @purpose: Add HomeSetup presets.
+add_hhs_presets() {
+
+  local hhs_presets
+
+  IFS=$'\n' read -r -d '' -a hhs_presets < <(find "${HHS_STARSHIP_PRESETS_DIR}" -type f -name "hhs-*.toml" -exec basename {} \;)
+  IFS="${OLDIFS}"
+  STARSHIP_PRESETS+=("${hhs_presets[@]}")
 }

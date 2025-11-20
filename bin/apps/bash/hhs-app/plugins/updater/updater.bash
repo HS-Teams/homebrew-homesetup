@@ -11,14 +11,21 @@
 #
 # Copyright (c) 2025, HomeSetup team
 
-# Current script version.
-VERSION=0.9.0
-
 # Current plugin name
 PLUGIN_NAME="updater"
 
+# Current script version.
+VERSION=0.9.0
+
+# Namespace cleanup
+UNSETS=(
+  help version cleanup execute update_hhs stamp_next_update is_updated update_check do_update
+)
+
+[[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
+
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} {check|update|stamp} [options]
 
  _   _           _       _
@@ -52,13 +59,8 @@ usage: ${APP_NAME} ${PLUGIN_NAME} {check|update|stamp} [options]
 
   Notes:
     - Update checks compare the installed version with the repository .VERSION file.
-USAGE
 
-UNSETS=(
-  help version cleanup execute update_hhs stamp_next_update is_updated update_check do_update
-)
-
-[[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
+EOF
 
 # @purpose: HHS plugin required function
 function help() {

@@ -14,15 +14,16 @@
 # Current plugin name
 PLUGIN_NAME="services"
 
+# Current hhs services version
+VERSION="1.0.0"
+
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute
 )
 
-# Current hhs services version
-VERSION="1.0.0"
-
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name] [options]
                      _
  ___  ___ _ ____   _(_) ___ ___  ___
@@ -53,7 +54,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} <operation> [service_name] [options]
 
   Notes:
     - Commands adapt to the current OS service manager (brew, rc-service, systemctl).
-USAGE
+EOF
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 

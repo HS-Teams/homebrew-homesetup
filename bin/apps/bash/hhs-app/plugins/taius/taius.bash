@@ -10,18 +10,19 @@
 #
 # Copyright (c) 2025, HomeSetup team
 
-# Current script version.
-VERSION="$(pip show hspylib-askai | grep Version)"
-
 # Current plugin name
 PLUGIN_NAME="taius"
 
+# Current script version.
+VERSION="$(pip show hspylib-askai | grep Version)"
+
+# Namespace cleanup
 UNSETS=(
   help version cleanup execute
 )
 
 # Usage message
-read -r -d '' USAGE <<USAGE
+read -r -d '' USAGE <<EOF
 usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
  _____     _
@@ -50,7 +51,7 @@ usage: ${APP_NAME} ${PLUGIN_NAME} <question> [options]
 
   Notes:
     - Requires the HomeSetup Python virtual environment and AskAI installation.
-USAGE
+EOF
 
 [[ -s "${HHS_DIR}/bin/app-commons.bash" ]] && source "${HHS_DIR}/bin/app-commons.bash"
 
