@@ -22,13 +22,12 @@
 #%    ${SCRIPT_NAME} -o DEFAULT arg1 arg2
 #%
 #================================================================
-#- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} (www.example.com) 0.0.4
-#-    author          Hugo Saporetti Junior
-#-    copyright       Copyright (c) http://www.example.com
-#-    license         MIT <https://opensource.org/licenses/MIT>
-#-    script_id       12345
-#-
+#  IMPLEMENTATION
+#     version         ${SCRIPT_NAME} (www.example.com) 0.9.0
+#     author          Hugo Saporetti Junior
+#     copyright       Copyright (c) Hugo Saporetti Junior
+#     license         MIT <https://opensource.org/licenses/MIT>
+#
 #================================================================
 #  HISTORY
 #     2025/03/01 : username : Script creation
